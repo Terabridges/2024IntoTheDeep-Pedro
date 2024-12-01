@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
 
+
+//TODO slow mode (left bumper), assign x button and dpad down, figure out wrist positions, figure out swivel level, maybe do field centric toggle?
+
 @Config
 @TeleOp(name="ShoddyTeleOp", group="TeleOp")
 public class ShoddyTeleOp extends LinearOpMode {
@@ -117,6 +120,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         double botVerticalPower = 0;
         double topVerticalPower = 0;
+        double intakePower = 0;
 
         waitForStart();
         runtime.reset();
@@ -161,12 +165,26 @@ public class ShoddyTeleOp extends LinearOpMode {
                 r.driveRobot(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             }
 
-            // Intake Power (Right Stick Y)
+            // Intake Power Toggles (DPAD RIGHT and DPAD LEFT)
             {
-                r.intake.setPower(gamepad1.right_stick_y);
+                if (t.toggle("dpad_right")) {
+                    if (t.dpRightToggle) {
+                        intakePower = po.INTAKE_POWER_IN;
+                    } else {
+                        intakePower = 0;
+                    }
+                }
+
+                if (t.toggle("dpad_left")) {
+                    if (t.dpLeftToggle) {
+                        intakePower = po.INTAKE_POWER_OUT;
+                    } else {
+                        intakePower = 0;
+                    }
+                }
             }
 
-            //Claw Toggles (Bumpers) Right Bumper Open/Closed, Left Bumper wrist
+            //Claw Open/Closed (Right Bumper)
             {
 
                 if (t.toggle("right_bumper")) {
@@ -174,14 +192,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                         clawTarget = po.CLAW_OPEN;
                     } else {
                         clawTarget = po.CLAW_CLOSED;
-                    }
-                }
-
-                if (t.toggle("left_bumper")) {
-                    if (t.lBumpToggle) {
-                        wristTarget = po.WRIST_PERP;
-                    } else {
-                        wristTarget = po.WRIST_PAR;
                     }
                 }
             }
@@ -335,9 +345,28 @@ public class ShoddyTeleOp extends LinearOpMode {
                 }
             }
 
-            //Break from macros (X)
+            // Slow Mode Toggle (Left Bumper)
             {
-                //do nothing here
+                if (t.toggle("left_bumper")) {
+                    if (t.lBumpToggle) {
+                        po.speed = po.speed * po.slowMultiplier;
+                    } else {
+                        po.speed = po.maxSpeed;
+                    }
+                }
+            }
+
+            //Set Swivel level toggle for specimen (dpad up)
+            {
+                if (t.toggle("dpad_up")) {
+                    if (t.dpUpToggle) {
+                        swivelTarget = po.SWIVEL_LEVEL;
+                        wristTarget = po.WRIST_PERP;
+                    } else {
+                        swivelTarget = po.SWIVEL_DOWN;
+                        wristTarget = po.WRIST_PAR;
+                    }
+                }
             }
 
             //Set powers
@@ -354,7 +383,8 @@ public class ShoddyTeleOp extends LinearOpMode {
             r.rightLinear.setPosition(rightLinearTarget);
             r.leftLinear.setPosition(leftLinearTarget);
             r.claw.setPosition(clawTarget);
-            //r.wrist.setPosition(wristTarget);
+            r.wrist.setPosition(wristTarget);
+            r.intake.setPower(intakePower);
 
 
             //Telemetry
@@ -414,9 +444,5 @@ public class ShoddyTeleOp extends LinearOpMode {
         r.rightSwivel.setPower(swivelPower);
     }
 
-    public void setLinearPower(double pos){
-        r.rightLinear.setPosition(pos);
-        r.leftLinear.setPosition(pos);
-    }
 }
 

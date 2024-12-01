@@ -10,7 +10,8 @@ public class ShoddyPositions {
     public double RIGHT_SLIDE_OUT = 0.04;
 
     //Intake
-    public double INTAKE_POWER_IN = -0.4;
+    public double INTAKE_POWER_IN = -0.8;
+    public double INTAKE_POWER_OUT = 0.8;
 
     //Claw
     public double CLAW_OPEN = 0.65;
@@ -33,6 +34,7 @@ public class ShoddyPositions {
     //Swivel
     public int SWIVEL_DOWN = 165;
     public int SWIVEL_UP = 60;
+    public int SWIVEL_LEVEL = 90;
 
     //Vertical Slides
     public int VERTICAL_UP = -3000;
