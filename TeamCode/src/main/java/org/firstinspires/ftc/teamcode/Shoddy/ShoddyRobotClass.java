@@ -84,23 +84,22 @@ public class ShoddyRobotClass {
         wrist = myOpMode.hardwareMap.get(Servo.class, "wrist");
         claw = myOpMode.hardwareMap.get(Servo.class, "claw");
 
-        //rightSwivel.setDirection(DcMotorSimple.Direction.REVERSE);
-        //rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightSwivel.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     public void motorSetUp(){
         topVertical = myOpMode.hardwareMap.get(DcMotor.class, "top_vertical");
         bottomVertical = myOpMode.hardwareMap.get(DcMotor.class, "bottom_vertical");
-        //emptyMotor = myOpMode.hardwareMap.get(DcMotor.class, "emptyMotor");
-        //topVertical.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        topVertical.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void analogSetUp(){
         leftArmAnalog = myOpMode.hardwareMap.analogInput.get("left_analog");
         rightArmAnalog = myOpMode.hardwareMap.analogInput.get("right_analog");
         rightSwivelAnalog = myOpMode.hardwareMap.analogInput.get("right_swivel_analog");
-        rightV4BEnc = new AbsoluteAnalogEncoder(rightArmAnalog);
-        leftV4BEnc = new AbsoluteAnalogEncoder(leftArmAnalog);
-        rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, -40);
+        rightV4BEnc = new AbsoluteAnalogEncoder(leftArmAnalog, 3.3, -150);
+        rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, 21);
     }
 
     public void driveRobot(double lf, double rf, double lb, double rb){

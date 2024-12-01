@@ -28,28 +28,28 @@ public class PID_Tuning extends LinearOpMode {
 
     //First PID for V4B
     private PIDController controller;
-    public static double p = 0, i = 0, d = 0;
-    public static double f = 0;
+    public static double p = 0.005, i = 0.01, d = 0.00004;
+    public static double f = 0.06;
     private final double ticks_in_degree = 144.0 / 180.0;
-    public static int V4BTarget = 160;
+    public static int V4BTarget;
     double armPos;
     double pid, targetArmAngle, ff, currentArmAngle, V4BPower;
 
     //Second PID for Vertical Slides
     private PIDController controller2;
-    public static double p2 = 0, i2 = 0, d2 = 0;
+    public static double p2 = 0.006, i2 = 0.001, d2 = 0;
     public static double f2 = 0;
     private final double ticks_in_degree2 = 144.0 / 180.0;
-    public static int vertSlidesTarget = 500;
+    public static int vertSlidesTarget;
     double armPos2;
     double pid2, targetArmAngle2, ff2, currentArmAngle2, verticalSlidesPower;
 
     //Third PID for Swivel
     private PIDController controller3;
-    public static double p3 = 0.005, i3 = 0.02, d3 = 0.0002;
+    public static double p3 = -0.005, i3 = 0.01, d3 = 0.0002;
     public static double f3 = 0.035;
     private final double ticks_in_degree3 = 144.0 / 180.0;
-    public static int swivelTarget = 220;
+    public static int swivelTarget;
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
@@ -60,12 +60,12 @@ public class PID_Tuning extends LinearOpMode {
         r.servoSetUp();
         r.motorSetUp();
         r.analogSetUp();
-        r.topVertical.setDirection(DcMotorSimple.Direction.REVERSE);
-        r.leftSwivel.setDirection(DcMotorSimple.Direction.REVERSE);
-        r.rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
-        r.topVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        r.bottomVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //r.topVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //r.bottomVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
         controller = new PIDController(p, i, d);
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
@@ -75,9 +75,9 @@ public class PID_Tuning extends LinearOpMode {
 
         while (opModeIsActive()){
 
-            setV4BPIDF(V4BTarget);
+            //setV4BPIDF(V4BTarget);
             setVerticalSlidesPIDF(vertSlidesTarget);
-            setSwivelPIDF(swivelTarget);
+            //setSwivelPIDF(swivelTarget);
 
             telemetry.addData("Swivel Power", r.rightSwivel.getPower());
             telemetry.addData("V4B Power", r.rightArm.getPower());
@@ -97,7 +97,7 @@ public class PID_Tuning extends LinearOpMode {
         armPos = r.rightV4BEnc.getCurrentPosition();
         pid = controller.calculate(armPos, target);
         targetArmAngle = target;
-        ff = Math.cos(targetArmAngle) * f;
+        ff = (Math.sin(Math.toRadians(targetArmAngle))) * f;
         currentArmAngle = Math.toRadians((armPos) / ticks_in_degree);
 
         V4BPower = pid + ff;
@@ -111,7 +111,7 @@ public class PID_Tuning extends LinearOpMode {
         armPos2 = r.topVertical.getCurrentPosition();
         pid2 = controller2.calculate(armPos2, target2);
         targetArmAngle2 = Math.toRadians((target2) / ticks_in_degree2);
-        ff2 = Math.cos(targetArmAngle2) * f2;
+        ff2 = targetArmAngle2 * f2;
         currentArmAngle2 = Math.toRadians((armPos2) / ticks_in_degree2);
 
         verticalSlidesPower = pid2 + ff2;
