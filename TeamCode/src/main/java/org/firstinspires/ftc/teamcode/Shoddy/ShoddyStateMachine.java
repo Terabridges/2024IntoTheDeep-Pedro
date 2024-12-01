@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode.Shoddy;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.Shoddy.*;
 
 public class ShoddyStateMachine {
 
@@ -34,7 +31,7 @@ public class ShoddyStateMachine {
 
     //Third PID for Swivel
     private PIDController controller3;
-    public static double p3 = 0.005, i3 = 0.02, d3 = 0.0002;
+    public static double p3 = -0.005, i3 = 0.01, d3 = 0.0002;
     public static double f3 = 0.035;
     private final double ticks_in_degree3 = 144.0 / 180.0;
     public static int swivelTarget;
@@ -82,8 +79,8 @@ public class ShoddyStateMachine {
         switch (intakeState) {
             case INTAKE_START:
                 if (t.currentGamepad1.a && !t.previousGamepad1.a){
-                    r.leftLinear.setPosition(po.LEFT_SLIDE_OUT_100);
-                    r.rightLinear.setPosition(po.RIGHT_SLIDE_OUT_100);
+                    r.leftLinear.setPosition(po.LEFT_SLIDE_OUT);
+                    r.rightLinear.setPosition(po.RIGHT_SLIDE_OUT);
                     intakeTimer.reset();
                     intakeState = IntakeState.INTAKE_EXTEND;
                 }
@@ -213,8 +210,8 @@ public class ShoddyStateMachine {
         switch (transferState) {
             case TRANSFER_START:
                 if (t.currentGamepad1.b && !t.previousGamepad1.b){
-                    r.leftLinear.setPosition(po.LEFT_SLIDE_IN_ALL);
-                    r.rightLinear.setPosition(po.RIGHT_SLIDE_IN_ALL);
+                    r.leftLinear.setPosition(po.LEFT_SLIDE_IN);
+                    r.rightLinear.setPosition(po.RIGHT_SLIDE_IN);
                     setV4BPIDF(po.V4B_TRANSFER_POS);
                     transferState = TransferState.TRANSFER_INTAKE;
                 }

@@ -5,12 +5,9 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
-
-import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 
 @Config
 @TeleOp(name="ShoddyTeleOp", group="TeleOp")
@@ -21,16 +18,12 @@ public class ShoddyTeleOp extends LinearOpMode {
     ShoddyRobotClass r;
     ShoddyToggles t;
     ShoddyPositions po;
-    ShoddyStateMachine sm;
     private ElapsedTime runtime;
 
 
-    // variables for left and right intake slide positions
-    public static double positionLeft = .85, positionRight = .15;
-
-    public boolean usePIDFvertical = false;
-    public boolean usePIDFswivel = false;
-    public boolean usePIDFV4B = false;
+    public boolean usePIDFvertical = true;
+    public boolean usePIDFswivel = true;
+    public boolean usePIDFV4B = true;
 
     //First PID for V4B
     private PIDController controller;
@@ -52,20 +45,52 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     //Third PID for Swivel
     private PIDController controller3;
-    public static double p3 = 0.005, i3 = 0.02, d3 = 0.0002;
+    public static double p3 = -0.006, i3 = 0.02, d3 = 0.0002;
     public static double f3 = 0.035;
     private final double ticks_in_degree3 = 144.0 / 180.0;
     public static int swivelTarget;
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
+    //FSM TEST STUFF
+    int extendTime = 400;
+    int transferTime = 2000;
+    int dropTime = 1000;
+
+    public enum IntakeState {
+        INTAKE_START,
+        INTAKE_EXTEND,
+        INTAKE_GRAB,
+        INTAKE_RETRACT
+    };
+
+    public enum OuttakeState {
+        OUTTAKE_START,
+        OUTTAKE_EXTEND,
+        OUTTAKE_SWIVEL,
+        OUTTAKE_DROP,
+        OUTTAKE_RETRACT
+    };
+
+    public enum TransferState {
+        TRANSFER_START,
+        TRANSFER_INTAKE,
+        TRANSFER_CLAW,
+        TRANSFER_OUTTAKE
+    };
+
+    public ShoddyStateMachine.IntakeState intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+    public ElapsedTime intakeTimer = new ElapsedTime();
+    public ShoddyStateMachine.OuttakeState outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+    public ElapsedTime outtakeTimer = new ElapsedTime();
+    public ShoddyStateMachine.TransferState transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+    public ElapsedTime transferTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
         r = new ShoddyRobotClass(this);
         t = new ShoddyToggles(this);
         po = new ShoddyPositions();
-        sm = new ShoddyStateMachine(this);
         runtime = new ElapsedTime();
 
         r.wheelSetUp();
@@ -81,21 +106,22 @@ public class ShoddyTeleOp extends LinearOpMode {
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
 
-        sm.intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
-        sm.outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
-        sm.transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+        V4BTarget = po.V4B_TRANSFER_POS;
+        vertSlidesTarget = po.VERTICAL_REST;
+        swivelTarget = po.SWIVEL_DOWN;
+
+        double leftLinearTarget = po.LEFT_SLIDE_IN;
+        double rightLinearTarget = po.RIGHT_SLIDE_IN;
+        double clawTarget = po.CLAW_CLOSED;
+        double wristTarget = po.WRIST_PAR;
+
+        double botVerticalPower = 0;
+        double topVerticalPower = 0;
 
         waitForStart();
         runtime.reset();
 
         //INIT
-//        while (runtime.milliseconds() < 500){
-//            setVerticalSlidesPIDF(po.VERTICAL_REST);
-//        }
-//        while (runtime.milliseconds() < 1000){
-//            setV4BPIDF(po.V4B_REST_POS);
-//        }
-
 
         while (opModeIsActive()) {
 
@@ -145,42 +171,168 @@ public class ShoddyTeleOp extends LinearOpMode {
 
                 if (t.toggle("right_bumper")) {
                     if (t.rBumpToggle) {
-                        po.CLAW_CLOSED_BOOL = false;
-                        r.claw.setPosition(po.CLAW_OPEN);
+                        clawTarget = po.CLAW_OPEN;
                     } else {
-                        po.CLAW_CLOSED_BOOL = true;
-                        r.claw.setPosition(po.CLAW_CLOSED);
+                        clawTarget = po.CLAW_CLOSED;
                     }
                 }
 
                 if (t.toggle("left_bumper")) {
                     if (t.lBumpToggle) {
-                        po.CLAW_DOWN_BOOL = false;
-                        r.wrist.setPosition(po.WRIST_PERP);
+                        wristTarget = po.WRIST_PERP;
                     } else {
-                        r.wrist.setPosition(po.WRIST_PAR);
+                        wristTarget = po.WRIST_PAR;
                     }
                 }
             }
 
-            // Vertical Adjust (Triggers)
+            // Vertical Adjust (Triggers) Vertical Hold (Left stick button)
             {
+                if ((t.currentGamepad1.right_trigger != 0) && !(t.previousGamepad1.right_trigger != 0)){
+                    usePIDFvertical = false;
+                    botVerticalPower = gamepad1.right_trigger;
+                    topVerticalPower = gamepad1.right_trigger;
+                }
 
+                if ((t.currentGamepad1.left_trigger != 0) && !(t.previousGamepad1.left_trigger != 0)){
+                    usePIDFvertical = false;
+                    botVerticalPower = -gamepad1.left_trigger;
+                    topVerticalPower = -gamepad1.left_trigger;
+                }
+
+                if (t.currentGamepad1.left_stick_button && !t.previousGamepad1.left_stick_button){
+                    usePIDFvertical = true;
+                    vertSlidesTarget = r.topVertical.getCurrentPosition();
+                }
             }
 
             //Auto Intake (A)
             {
-                sm.intakeStateCheck();
+                switch (intakeState) {
+                    case INTAKE_START:
+                        if (t.currentGamepad1.a && !t.previousGamepad1.a){
+                            usePIDFvertical = true;
+                            leftLinearTarget = po.LEFT_SLIDE_OUT;
+                            rightLinearTarget = po.RIGHT_SLIDE_OUT;
+                            intakeTimer.reset();
+                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_EXTEND;
+                        }
+                        break;
+                    case INTAKE_EXTEND:
+                        if (intakeTimer.milliseconds() >= extendTime) {
+                            V4BTarget = po.V4B_INTAKE_POS;
+                            intakeTimer.reset();
+                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_GRAB;
+                        }
+                        break;
+                    case INTAKE_GRAB:
+                        if (t.currentGamepad1.a && !t.previousGamepad1.a) {
+                            V4BTarget = po.V4B_REST_POS;
+                            leftLinearTarget = po.LEFT_SLIDE_IN;
+                            rightLinearTarget = po.RIGHT_SLIDE_IN;
+                            intakeTimer.reset();
+                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_RETRACT;
+                        }
+                        break;
+                    case INTAKE_RETRACT:
+                        if (intakeTimer.milliseconds() >= extendTime) {
+                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+                        }
+                        break;
+                    default:
+                        intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+
+                }
+
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (intakeState != ShoddyStateMachine.IntakeState.INTAKE_START)){
+                    intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+                }
             }
 
             //Auto Outtake (Y)
             {
-                sm.outtakeStateCheck();
+                switch (outtakeState) {
+                    case OUTTAKE_START:
+                        if (t.currentGamepad1.y && !t.previousGamepad1.y){
+                            usePIDFvertical = true;
+                            vertSlidesTarget = po.VERTICAL_UP;
+                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_EXTEND;
+                        }
+                        break;
+                    case OUTTAKE_EXTEND:
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
+                            swivelTarget = po.SWIVEL_UP;
+                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_SWIVEL;
+                        }
+                        break;
+                    case OUTTAKE_SWIVEL:
+                        if (t.currentGamepad1.y && !t.previousGamepad1.y) {
+                            clawTarget = po.CLAW_OPEN;
+                            outtakeTimer.reset();
+                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_DROP;
+                        }
+                        break;
+                    case OUTTAKE_DROP:
+                        if ((t.currentGamepad1.y && !t.previousGamepad1.y) && (outtakeTimer.milliseconds() >= 1000)) {
+                            clawTarget = po.CLAW_CLOSED;
+                            swivelTarget = po.SWIVEL_DOWN;
+                            vertSlidesTarget = po.VERTICAL_REST;
+                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_RETRACT;
+                        }
+                        break;
+                    case OUTTAKE_RETRACT:
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+
+                        }
+                        break;
+                    default:
+                        outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+                }
+
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (outtakeState != ShoddyStateMachine.OuttakeState.OUTTAKE_START)){
+                    outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+                }
             }
 
             //Auto Transfer (B)
             {
-                sm.transferStateCheck();
+                switch (transferState) {
+                    case TRANSFER_START:
+                        if (t.currentGamepad1.b && !t.previousGamepad1.b){
+                            usePIDFvertical = true;
+                            leftLinearTarget = po.LEFT_SLIDE_IN;
+                            rightLinearTarget = po.RIGHT_SLIDE_IN;
+                            V4BTarget = po.V4B_TRANSFER_POS;
+                            transferState = ShoddyStateMachine.TransferState.TRANSFER_INTAKE;
+                        }
+                        break;
+                    case TRANSFER_INTAKE:
+                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) < 10) {
+                            clawTarget = po.CLAW_OPEN;
+                            vertSlidesTarget = po.VERTICAL_DOWN;
+                            transferState = ShoddyStateMachine.TransferState.TRANSFER_CLAW;
+                        }
+                        break;
+                    case TRANSFER_CLAW:
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) < 50) {
+                            clawTarget = po.CLAW_CLOSED;
+                            vertSlidesTarget = po.VERTICAL_REST;
+                            transferState = ShoddyStateMachine.TransferState.TRANSFER_OUTTAKE;
+                        }
+                        break;
+                    case TRANSFER_OUTTAKE:
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                            transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                        }
+                        break;
+                    default:
+                        transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                }
+
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (transferState != ShoddyStateMachine.TransferState.TRANSFER_START)){
+                    transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                }
             }
 
             //Break from macros (X)
@@ -189,21 +341,21 @@ public class ShoddyTeleOp extends LinearOpMode {
             }
 
             //Set powers
-            // Set servo positions after all logic
-            r.rightLinear.setPosition(positionRight);
-            r.leftLinear.setPosition(positionLeft);
+            setV4BPIDF(V4BTarget);
+            setSwivelPIDF(swivelTarget);
 
-//            if (usePIDFswivel){
-//                setSwivelPIDF(swivelTarget);
-//            }
-//
-//            if (usePIDFvertical){
-//                setVerticalSlidesPIDF(vertSlidesTarget);
-//            }
-//
-//            if (usePIDFV4B){
-//                setV4BPIDF(V4BTarget);
-//            }
+            if (usePIDFvertical) {
+                setVerticalSlidesPIDF(vertSlidesTarget);
+            } else {
+                r.bottomVertical.setPower(botVerticalPower);
+                r.topVertical.setPower(topVerticalPower);
+            }
+
+            r.rightLinear.setPosition(rightLinearTarget);
+            r.leftLinear.setPosition(leftLinearTarget);
+            r.claw.setPosition(clawTarget);
+            //r.wrist.setPosition(wristTarget);
+
 
             //Telemetry
             telemetry.addData("runtime", runtime.milliseconds());
@@ -213,6 +365,8 @@ public class ShoddyTeleOp extends LinearOpMode {
             telemetry.addData("Swivel Target", swivelTarget);
             telemetry.addData("Vert Pos", r.topVertical.getCurrentPosition());
             telemetry.addData("Vert Target", vertSlidesTarget);
+            telemetry.addData("Left Slide", leftLinearTarget);
+            telemetry.addData("Right Slide", rightLinearTarget);
             telemetry.update();
 
         }

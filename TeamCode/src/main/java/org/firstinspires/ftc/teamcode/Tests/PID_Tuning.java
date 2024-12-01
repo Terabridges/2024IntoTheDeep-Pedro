@@ -46,7 +46,7 @@ public class PID_Tuning extends LinearOpMode {
 
     //Third PID for Swivel
     private PIDController controller3;
-    public static double p3 = 0.005, i3 = 0.02, d3 = 0.0002;
+    public static double p3 = -0.005, i3 = 0.01, d3 = 0.0002;
     public static double f3 = 0.035;
     private final double ticks_in_degree3 = 144.0 / 180.0;
     public static int swivelTarget;
@@ -75,8 +75,8 @@ public class PID_Tuning extends LinearOpMode {
 
         while (opModeIsActive()){
 
-            setV4BPIDF(V4BTarget);
-            //setVerticalSlidesPIDF(vertSlidesTarget);
+            //setV4BPIDF(V4BTarget);
+            setVerticalSlidesPIDF(vertSlidesTarget);
             //setSwivelPIDF(swivelTarget);
 
             telemetry.addData("Swivel Power", r.rightSwivel.getPower());
