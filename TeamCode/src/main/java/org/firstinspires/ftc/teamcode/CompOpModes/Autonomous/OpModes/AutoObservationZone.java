@@ -1,15 +1,12 @@
-package org.firstinspires.ftc.teamcode.CompOpModes.Autonomous;
+package org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.OpModes;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPositionsNet;
+import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPositionsObservation;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
 @Config
@@ -17,43 +14,18 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
 public class AutoObservationZone extends OpMode
 {
+    AutoPositionsObservation o = new AutoPositionsObservation();
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-    private int pathState; //Used by pathUpdate
+    private int pathState;
 
-    //Subsystems here (claw, slides, etc)
-
-
-    //Poses ----------------------------
-
-    //Start Pose
-    private final Pose startPose = new Pose(9, 111, Math.toRadians(270)); //example. Fix values
-
-    //Scoring Pose
-    private final Pose scorePose = new Pose(14, 129, Math.toRadians(315)); //example. Fix values
-
-    //First Spike Mark
-
-    //Second Spike Mark
-
-    //Third Spike Mark
-
-    //Park Pose
-
-    //Park Control Pose (The Robot will not go here, used to manipulate bezier curve.
-
-
-    //Paths + Path Chains -----------------
-    private Path scorePreload, park;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    //Subsystems here
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
     public void buildPaths()
     {
-        //scorePreload path. BezierLine, straight line.
-        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
+
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -96,15 +68,11 @@ public class AutoObservationZone extends OpMode
         opmodeTimer.resetTimer();
 
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(startPose);
+        follower.setStartingPose(o.startPose);
 
         buildPaths();
 
-        //claw = new ClawSubsystem(hardwareMap);
-
-        // Set the claw to positions for init
-        //claw.closeClaw();
-        //claw.startClaw();
+        //other subsystems init
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
