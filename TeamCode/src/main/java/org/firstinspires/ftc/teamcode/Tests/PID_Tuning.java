@@ -24,8 +24,6 @@ public class PID_Tuning extends LinearOpMode {
     ShoddyPositions po = new ShoddyPositions();
     private ElapsedTime runtime = new ElapsedTime();
 
-    //public DcMotor verticalEnc;
-
     //First PID for V4B
     private PIDController controller;
     public static double p = 0.005, i = 0.01, d = 0.00004;
@@ -61,9 +59,6 @@ public class PID_Tuning extends LinearOpMode {
         r.motorSetUp();
         r.analogSetUp();
 
-        //r.topVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //r.bottomVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         controller = new PIDController(p, i, d);
@@ -72,6 +67,9 @@ public class PID_Tuning extends LinearOpMode {
 
         waitForStart();
         runtime.reset();
+
+
+        r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         while (opModeIsActive()){
 

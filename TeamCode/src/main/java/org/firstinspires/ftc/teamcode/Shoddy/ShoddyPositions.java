@@ -37,8 +37,8 @@ public class ShoddyPositions {
     public int SWIVEL_LEVEL = 90;
 
     //Vertical Slides
-    public int VERTICAL_UP = -3000;
-    public int VERTICAL_DOWN = 418;
-    public int VERTICAL_REST = -335;
+    public int VERTICAL_UP = -3400;
+    public int VERTICAL_DOWN = 0;
+    public int VERTICAL_REST = -750;
 
 }

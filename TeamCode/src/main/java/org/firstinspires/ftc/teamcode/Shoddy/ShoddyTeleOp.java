@@ -10,7 +10,7 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
 
 
-//TODO slow mode (left bumper), assign x button and dpad down, figure out wrist positions, figure out swivel level, maybe do field centric toggle?
+//TODO slow mode (left bumper), assign x button and (dpad down probably should move vertical slides to specimen position), figure out wrist positions, figure out swivel level, maybe do field centric toggle?
 
 @Config
 @TeleOp(name="ShoddyTeleOp", group="TeleOp")
@@ -82,11 +82,11 @@ public class ShoddyTeleOp extends LinearOpMode {
         TRANSFER_OUTTAKE
     };
 
-    public ShoddyStateMachine.IntakeState intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+    public IntakeState intakeState = IntakeState.INTAKE_START;
     public ElapsedTime intakeTimer = new ElapsedTime();
-    public ShoddyStateMachine.OuttakeState outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+    public OuttakeState outtakeState = OuttakeState.OUTTAKE_START;
     public ElapsedTime outtakeTimer = new ElapsedTime();
-    public ShoddyStateMachine.TransferState transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+    public TransferState transferState = TransferState.TRANSFER_START;
     public ElapsedTime transferTimer = new ElapsedTime();
 
     @Override
@@ -101,13 +101,12 @@ public class ShoddyTeleOp extends LinearOpMode {
         r.motorSetUp();
         r.analogSetUp();
 
-        r.topVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        r.bottomVertical.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         controller = new PIDController(p, i, d);
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
+
+        r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         V4BTarget = po.V4B_TRANSFER_POS;
         vertSlidesTarget = po.VERTICAL_REST;
@@ -125,11 +124,11 @@ public class ShoddyTeleOp extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        //INIT
-
         while (opModeIsActive()) {
 
             t.copyGamepad();
+
+            //INIT
 
             //Robot Drive (Left Stick and Right Stick X)
             {
@@ -225,14 +224,14 @@ public class ShoddyTeleOp extends LinearOpMode {
                             leftLinearTarget = po.LEFT_SLIDE_OUT;
                             rightLinearTarget = po.RIGHT_SLIDE_OUT;
                             intakeTimer.reset();
-                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_EXTEND;
+                            intakeState = IntakeState.INTAKE_EXTEND;
                         }
                         break;
                     case INTAKE_EXTEND:
                         if (intakeTimer.milliseconds() >= extendTime) {
                             V4BTarget = po.V4B_INTAKE_POS;
                             intakeTimer.reset();
-                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_GRAB;
+                            intakeState = IntakeState.INTAKE_GRAB;
                         }
                         break;
                     case INTAKE_GRAB:
@@ -241,21 +240,21 @@ public class ShoddyTeleOp extends LinearOpMode {
                             leftLinearTarget = po.LEFT_SLIDE_IN;
                             rightLinearTarget = po.RIGHT_SLIDE_IN;
                             intakeTimer.reset();
-                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_RETRACT;
+                            intakeState = IntakeState.INTAKE_RETRACT;
                         }
                         break;
                     case INTAKE_RETRACT:
                         if (intakeTimer.milliseconds() >= extendTime) {
-                            intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+                            intakeState = IntakeState.INTAKE_START;
                         }
                         break;
                     default:
-                        intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+                        intakeState = IntakeState.INTAKE_START;
 
                 }
 
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (intakeState != ShoddyStateMachine.IntakeState.INTAKE_START)){
-                    intakeState = ShoddyStateMachine.IntakeState.INTAKE_START;
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (intakeState != IntakeState.INTAKE_START)){
+                    intakeState = IntakeState.INTAKE_START;
                 }
             }
 
@@ -266,20 +265,20 @@ public class ShoddyTeleOp extends LinearOpMode {
                         if (t.currentGamepad1.y && !t.previousGamepad1.y){
                             usePIDFvertical = true;
                             vertSlidesTarget = po.VERTICAL_UP;
-                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_EXTEND;
+                            outtakeState = OuttakeState.OUTTAKE_EXTEND;
                         }
                         break;
                     case OUTTAKE_EXTEND:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
                             swivelTarget = po.SWIVEL_UP;
-                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_SWIVEL;
+                            outtakeState = OuttakeState.OUTTAKE_SWIVEL;
                         }
                         break;
                     case OUTTAKE_SWIVEL:
                         if (t.currentGamepad1.y && !t.previousGamepad1.y) {
                             clawTarget = po.CLAW_OPEN;
                             outtakeTimer.reset();
-                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_DROP;
+                            outtakeState = OuttakeState.OUTTAKE_DROP;
                         }
                         break;
                     case OUTTAKE_DROP:
@@ -287,21 +286,21 @@ public class ShoddyTeleOp extends LinearOpMode {
                             clawTarget = po.CLAW_CLOSED;
                             swivelTarget = po.SWIVEL_DOWN;
                             vertSlidesTarget = po.VERTICAL_REST;
-                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_RETRACT;
+                            outtakeState = OuttakeState.OUTTAKE_RETRACT;
                         }
                         break;
                     case OUTTAKE_RETRACT:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
-                            outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+                            outtakeState = OuttakeState.OUTTAKE_START;
 
                         }
                         break;
                     default:
-                        outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+                        outtakeState = OuttakeState.OUTTAKE_START;
                 }
 
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (outtakeState != ShoddyStateMachine.OuttakeState.OUTTAKE_START)){
-                    outtakeState = ShoddyStateMachine.OuttakeState.OUTTAKE_START;
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (outtakeState != OuttakeState.OUTTAKE_START)){
+                    outtakeState = OuttakeState.OUTTAKE_START;
                 }
             }
 
@@ -314,34 +313,34 @@ public class ShoddyTeleOp extends LinearOpMode {
                             leftLinearTarget = po.LEFT_SLIDE_IN;
                             rightLinearTarget = po.RIGHT_SLIDE_IN;
                             V4BTarget = po.V4B_TRANSFER_POS;
-                            transferState = ShoddyStateMachine.TransferState.TRANSFER_INTAKE;
+                            transferState = TransferState.TRANSFER_INTAKE;
                         }
                         break;
                     case TRANSFER_INTAKE:
                         if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) < 10) {
                             clawTarget = po.CLAW_OPEN;
                             vertSlidesTarget = po.VERTICAL_DOWN;
-                            transferState = ShoddyStateMachine.TransferState.TRANSFER_CLAW;
+                            transferState = TransferState.TRANSFER_CLAW;
                         }
                         break;
                     case TRANSFER_CLAW:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) < 50) {
                             clawTarget = po.CLAW_CLOSED;
                             vertSlidesTarget = po.VERTICAL_REST;
-                            transferState = ShoddyStateMachine.TransferState.TRANSFER_OUTTAKE;
+                            transferState = TransferState.TRANSFER_OUTTAKE;
                         }
                         break;
                     case TRANSFER_OUTTAKE:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
-                            transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                            transferState = TransferState.TRANSFER_START;
                         }
                         break;
                     default:
-                        transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                        transferState = TransferState.TRANSFER_START;
                 }
 
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (transferState != ShoddyStateMachine.TransferState.TRANSFER_START)){
-                    transferState = ShoddyStateMachine.TransferState.TRANSFER_START;
+                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (transferState != TransferState.TRANSFER_START)){
+                    transferState = TransferState.TRANSFER_START;
                 }
             }
 
