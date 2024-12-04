@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.OpModes;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -22,6 +23,7 @@ public class AutoNetZone extends OpMode
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
+    public boolean holdPos = false;
 
     //Subsystems here
 
@@ -95,7 +97,7 @@ public class AutoNetZone extends OpMode
                     //claw.openClaw();
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.grabPickup1, /* holdEnd = */ true);
+                    follower.followPath(n.grabPickup1, /* holdEnd = */ holdPos);
                     setPathState(2);
                 }
                 break;
@@ -105,19 +107,19 @@ public class AutoNetZone extends OpMode
                     //Grab Sample
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(n.grabPickup1, /* holdEnd = */ true);
-                    setPathState(2);
+                    follower.followPath(n.scorePickup1, /* holdEnd = */ holdPos);
+                    setPathState(3);
                 }
                 break;
             case 3:
-                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
+                //if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
 
                     //Score Sample
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.grabPickup1, /* holdEnd = */ true);
-                    setPathState(2);
-                }
+                    //follower.followPath(n.grabPickup1, /* holdEnd = */ holdPos);
+                    //setPathState(4);
+                //}
                 break;
             //case 4:
         }
