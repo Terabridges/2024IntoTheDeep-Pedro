@@ -33,10 +33,8 @@ public class AutoNetZone extends OpMode
     {
 
         n.scorePreload = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.startPose), new Point(n.startOffsetPose)))
-                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.startOffsetPose.getHeading())
-                .addPath(new BezierLine(new Point(n.startOffsetPose), new Point(n.preloadPose)))
-                .setLinearHeadingInterpolation(n.startOffsetPose.getHeading(), n.preloadPose.getHeading())
+                .addPath(new BezierLine(new Point(n.startPose), new Point(n.preloadPose)))
+                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.preloadPose.getHeading())
                 .build();
 
         n.grabPickup1 = follower.pathBuilder()
@@ -49,33 +47,31 @@ public class AutoNetZone extends OpMode
                 .setLinearHeadingInterpolation(n.pickup1Pose.getHeading(), n.scorePose.getHeading())
                 .build();
 
-        /*
         n.grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.), new Point(n.)))
-                .setLinearHeadingInterpolation(n..getHeading(), n..getHeading())
+                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.pickup2Pose)))
+                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.pickup2Pose.getHeading())
                 .build();
 
         n.scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.), new Point(n.)))
-                .setLinearHeadingInterpolation(n..getHeading(), n..getHeading())
+                .addPath(new BezierLine(new Point(n.pickup2Pose), new Point(n.scorePose)))
+                .setLinearHeadingInterpolation(n.pickup2Pose.getHeading(), n.scorePose.getHeading())
                 .build();
 
         n.grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.), new Point(n.)))
-                .setLinearHeadingInterpolation(n..getHeading(), n..getHeading())
+                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.pickup3Pose)))
+                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.pickup3Pose.getHeading())
                 .build();
 
         n.scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.), new Point(n.)))
-                .setLinearHeadingInterpolation(n..getHeading(), n..getHeading())
+                .addPath(new BezierLine(new Point(n.pickup3Pose), new Point(n.scorePose)))
+                .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.scorePose.getHeading())
                 .build();
 
         n.park = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.), new Point(n.)))
-                .setLinearHeadingInterpolation(n..getHeading(), n..getHeading())
+                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.parkPose)))
+                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.parkPose.getHeading())
                 .build();
 
-        */
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -104,7 +100,7 @@ public class AutoNetZone extends OpMode
             case 2:
                 if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1)) {
 
-                    //Grab Sample
+                    //Grab Sample 1
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(n.scorePickup1, /* holdEnd = */ holdPos);
@@ -112,16 +108,53 @@ public class AutoNetZone extends OpMode
                 }
                 break;
             case 3:
-                //if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
+                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
 
                     //Score Sample
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    //follower.followPath(n.grabPickup1, /* holdEnd = */ holdPos);
-                    //setPathState(4);
-                //}
+                    follower.followPath(n.grabPickup2, /* holdEnd = */ holdPos);
+                    setPathState(4);
+                }
                 break;
-            //case 4:
+            case 4:
+                if(follower.getPose().getX() > (n.pickup2Pose.getX() - 1) && follower.getPose().getY() > (n.pickup2Pose.getY() - 1)) {
+
+                    //Grab Sample 2
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(n.scorePickup2, /* holdEnd = */ holdPos);
+                    setPathState(5);
+                }
+                break;
+            case 5:
+                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
+
+                    //Score Sample
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(n.grabPickup3, /* holdEnd = */ holdPos);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                if(follower.getPose().getX() > (n.pickup3Pose.getX() - 1) && follower.getPose().getY() > (n.pickup3Pose.getY() - 1)) {
+
+                    //Grab Sample 3
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(n.scorePickup3, /* holdEnd = */ holdPos);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(n.park, /* holdEnd = */ holdPos);
+                    setPathState(0);
+                }
+                break;
         }
     }
 
@@ -180,4 +213,6 @@ public class AutoNetZone extends OpMode
     @Override
     public void stop() {
     }
+
+    //Josh put your methods here. Example: "openClaw, runIntake, extendIntake, preloadOutake, etc."
 }
