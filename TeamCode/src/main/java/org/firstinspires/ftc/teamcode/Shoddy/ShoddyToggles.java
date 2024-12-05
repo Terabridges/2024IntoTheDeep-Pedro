@@ -10,13 +10,15 @@ public class ShoddyToggles {
     public Gamepad previousGamepad1 = new Gamepad();
     public boolean lBumpToggle = false;
     public boolean rBumpToggle = false;
-    public boolean slowModeToggle = false;
     public boolean aToggle = false;
     public boolean yToggle = false;
     public boolean bToggle = false;
+    public boolean xToggle = false;
     public boolean dpRightToggle = false;
     public boolean dpLeftToggle = false;
     public boolean dpUpToggle = false;
+    public boolean dpDownToggle = false;
+    public boolean lStickToggle = false;
 
 
     public ShoddyToggles(LinearOpMode opmode) {
@@ -42,7 +44,7 @@ public class ShoddyToggles {
             }
         } else if (button.equals("x")) {
             if (currentGamepad1.x && !previousGamepad1.x) {
-                slowModeToggle = !slowModeToggle;
+                xToggle = !xToggle;
                 return true;
             }
         } else if (button.equals("a")) {
@@ -73,6 +75,16 @@ public class ShoddyToggles {
         } else if (button.equals("dpad_up")) {
             if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
                 dpUpToggle = !dpUpToggle;
+                return true;
+            }
+        } else if (button.equals("left_stick_button")) {
+            if (currentGamepad1.left_stick_button && !previousGamepad1.left_stick_button) {
+                lStickToggle = !lStickToggle;
+                return true;
+            }
+        } else if (button.equals("dpad_down")) {
+            if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down) {
+                dpDownToggle = !dpDownToggle;
                 return true;
             }
         }

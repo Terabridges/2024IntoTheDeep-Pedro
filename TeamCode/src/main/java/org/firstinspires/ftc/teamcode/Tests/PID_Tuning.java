@@ -75,7 +75,7 @@ public class PID_Tuning extends LinearOpMode {
 
             //setV4BPIDF(V4BTarget);
             setVerticalSlidesPIDF(vertSlidesTarget);
-            //setSwivelPIDF(swivelTarget);
+            setSwivelPIDF(swivelTarget);
 
             telemetry.addData("Swivel Power", r.rightSwivel.getPower());
             telemetry.addData("V4B Power", r.rightArm.getPower());

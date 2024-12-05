@@ -22,9 +22,9 @@ public class ShoddyPositions {
     public double WRIST_PERP = 0.59;
 
     //Drive
-    public double maxSpeed = 1;
-    public double speed = maxSpeed;
-    public double slowMultiplier = (0.5);
+    public double speed;
+    public double fastSpeed = 1;
+    public double slowSpeed = 0.5;
 
     //V4B
     public int V4B_TRANSFER_POS = 85;
@@ -40,5 +40,9 @@ public class ShoddyPositions {
     public int VERTICAL_UP = -3400;
     public int VERTICAL_DOWN = 0;
     public int VERTICAL_REST = -750;
+
+    //Other
+    public double MIN_TRIGGER_VAL = 0;
+    public int TURN_VAL = 1;
 
 }

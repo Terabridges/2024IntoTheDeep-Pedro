@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -121,6 +122,10 @@ public class ShoddyTeleOp extends LinearOpMode {
         double topVerticalPower = 0;
         double intakePower = 0;
 
+        boolean triggerIntake = true;
+
+        po.speed = po.fastSpeed;
+
         waitForStart();
         runtime.reset();
 
@@ -136,7 +141,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                 // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
                 double axial = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
                 double lateral = gamepad1.left_stick_x;
-                double yaw = gamepad1.right_stick_x;
+                double yaw = gamepad1.right_stick_x * po.TURN_VAL;
                 // Combine the joystick requests for each axis-motion to determine each wheel's power.
                 // Set up a variable for each drive wheel to save the power level for telemetry.
                 double leftFrontPower = axial + lateral + yaw;
@@ -158,7 +163,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                 leftFrontPower *= po.speed;
                 rightFrontPower *= po.speed;
                 leftBackPower *= po.speed;
-                leftFrontPower *= po.speed;
+                rightBackPower *= po.speed;
 
                 // Send calculated power to wheels
                 r.driveRobot(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
@@ -197,21 +202,30 @@ public class ShoddyTeleOp extends LinearOpMode {
 
             // Vertical Adjust (Triggers) Vertical Hold (Left stick button)
             {
-                if ((t.currentGamepad1.right_trigger != 0) && !(t.previousGamepad1.right_trigger != 0)){
-                    usePIDFvertical = false;
-                    botVerticalPower = gamepad1.right_trigger;
-                    topVerticalPower = gamepad1.right_trigger;
-                }
 
-                if ((t.currentGamepad1.left_trigger != 0) && !(t.previousGamepad1.left_trigger != 0)){
-                    usePIDFvertical = false;
-                    botVerticalPower = -gamepad1.left_trigger;
-                    topVerticalPower = -gamepad1.left_trigger;
-                }
+                if (!triggerIntake) {
+                    if (t.currentGamepad1.right_trigger > po.MIN_TRIGGER_VAL) {
+                        usePIDFvertical = false;
+                        botVerticalPower = gamepad1.right_trigger;
+                        topVerticalPower = gamepad1.right_trigger;
+                    } else if (t.currentGamepad1.left_trigger > po.MIN_TRIGGER_VAL) {
+                        usePIDFvertical = false;
+                        botVerticalPower = -gamepad1.left_trigger;
+                        topVerticalPower = -gamepad1.left_trigger;
+                    }
 
-                if (t.currentGamepad1.left_stick_button && !t.previousGamepad1.left_stick_button){
-                    usePIDFvertical = true;
-                    vertSlidesTarget = r.topVertical.getCurrentPosition();
+                    if ((t.currentGamepad1.right_trigger == 0) && (t.currentGamepad1.left_trigger == 0) && (!usePIDFvertical)) {
+                        usePIDFvertical = true;
+                        vertSlidesTarget = r.topVertical.getCurrentPosition();
+                    }
+                } else {
+                    if (t.currentGamepad1.right_trigger > po.MIN_TRIGGER_VAL) {
+                        intakePower = t.currentGamepad1.right_trigger;
+                    } else if (t.currentGamepad1.left_trigger > po.MIN_TRIGGER_VAL) {
+                        intakePower = -t.currentGamepad1.left_trigger;
+                    } else {
+                        intakePower = 0;
+                    }
                 }
             }
 
@@ -240,6 +254,11 @@ public class ShoddyTeleOp extends LinearOpMode {
                             leftLinearTarget = po.LEFT_SLIDE_IN;
                             rightLinearTarget = po.RIGHT_SLIDE_IN;
                             intakeTimer.reset();
+                            r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
+                            po.TURN_VAL = -1;
                             intakeState = IntakeState.INTAKE_RETRACT;
                         }
                         break;
@@ -271,6 +290,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case OUTTAKE_EXTEND:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
                             swivelTarget = po.SWIVEL_UP;
+                            wristTarget = po.WRIST_PERP;
                             outtakeState = OuttakeState.OUTTAKE_SWIVEL;
                         }
                         break;
@@ -284,8 +304,14 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case OUTTAKE_DROP:
                         if ((t.currentGamepad1.y && !t.previousGamepad1.y) && (outtakeTimer.milliseconds() >= 1000)) {
                             clawTarget = po.CLAW_CLOSED;
+                            wristTarget = po.WRIST_PAR;
                             swivelTarget = po.SWIVEL_DOWN;
                             vertSlidesTarget = po.VERTICAL_REST;
+                            r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
+                            po.TURN_VAL = 1;
                             outtakeState = OuttakeState.OUTTAKE_RETRACT;
                         }
                         break;
@@ -344,18 +370,52 @@ public class ShoddyTeleOp extends LinearOpMode {
                 }
             }
 
-            // Slow Mode Toggle (Left Bumper)
+            //Swap Direction (X)
             {
-                if (t.toggle("left_bumper")) {
-                    if (t.lBumpToggle) {
-                        po.speed = po.speed * po.slowMultiplier;
+                if (t.toggle("x")) {
+                    if (t.xToggle) {
+                        //Reverse
+                        r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
+                        r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
+                        r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
+                        r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
+                        po.TURN_VAL = -1;
                     } else {
-                        po.speed = po.maxSpeed;
+                        //Normal
+                        r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
+                        r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
+                        r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
+                        r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
+                        po.TURN_VAL = 1;
                     }
                 }
             }
 
-            //Set Swivel level toggle for specimen (dpad up)
+
+            // Slow Mode Toggle (Left Bumper)
+            {
+                if (t.toggle("left_bumper")) {
+                    if (t.lBumpToggle) {
+                        po.speed = po.slowSpeed;
+                    } else {
+                        po.speed = po.fastSpeed;
+                    }
+                }
+            }
+
+            //Switch Trigger Mode (Left Stick Button)
+            {
+                if (t.toggle("left_stick_button")) {
+                    if (t.lStickToggle) {
+                        triggerIntake = false;
+                    } else {
+                        triggerIntake = true;
+                    }
+                }
+            }
+
+
+            //Set Swivel level toggle for specimen bar (dpad up)
             {
                 if (t.toggle("dpad_up")) {
                     if (t.dpUpToggle) {
@@ -367,6 +427,18 @@ public class ShoddyTeleOp extends LinearOpMode {
                     }
                 }
             }
+
+            //Set Swivel for wall grab
+            if (t.toggle("dpad_down")) {
+                if (t.dpDownToggle) {
+                    swivelTarget = po.SWIVEL_LEVEL;
+                    wristTarget = po.WRIST_PERP;
+                } else {
+                    swivelTarget = po.SWIVEL_DOWN;
+                    wristTarget = po.WRIST_PAR;
+                }
+            }
+
 
             //Set powers
             setV4BPIDF(V4BTarget);
@@ -387,15 +459,8 @@ public class ShoddyTeleOp extends LinearOpMode {
 
 
             //Telemetry
-            telemetry.addData("runtime", runtime.milliseconds());
-            telemetry.addData("V4B Pos", r.rightV4BEnc.getCurrentPosition());
-            telemetry.addData("V4B Target", V4BTarget);
-            telemetry.addData("Swivel Pos", r.rightSwivelEnc.getCurrentPosition());
-            telemetry.addData("Swivel Target", swivelTarget);
-            telemetry.addData("Vert Pos", r.topVertical.getCurrentPosition());
-            telemetry.addData("Vert Target", vertSlidesTarget);
-            telemetry.addData("Left Slide", leftLinearTarget);
-            telemetry.addData("Right Slide", rightLinearTarget);
+            telemetry.addData("Left Trigger", t.currentGamepad1.left_trigger);
+            telemetry.addData("Right Trigger", t.currentGamepad1.right_trigger);
             telemetry.update();
 
         }
@@ -442,6 +507,5 @@ public class ShoddyTeleOp extends LinearOpMode {
         r.leftSwivel.setPower(swivelPower);
         r.rightSwivel.setPower(swivelPower);
     }
-
 }
 
