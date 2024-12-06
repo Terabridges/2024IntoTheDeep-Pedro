@@ -33,18 +33,13 @@ import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPosit
 public class AutoNetZone extends OpMode
 {
     ShoddyRobotClassAuto r;
-    ShoddyPositions po;
+    ShoddyPositions po = new ShoddyPositions();
     AutoPositionsNet n = new AutoPositionsNet();
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
-    public boolean holdPos = false;
+    public boolean holdPos = true;
 
-    //Subsystems here
-
-    public AbsoluteAnalogEncoder rightV4BEnc;
-    public AbsoluteAnalogEncoder leftV4BEnc;
-    public AbsoluteAnalogEncoder rightSwivelEnc;
 
     //Other Shit
 
@@ -55,8 +50,6 @@ public class AutoNetZone extends OpMode
     double botVerticalPower = 0;
     double topVerticalPower = 0;
     double intakePower = 0;
-
-    public ElapsedTime outtakeTimer = new ElapsedTime();
 
     public boolean usePIDFvertical = true;
     public boolean usePIDFswivel = true;
@@ -89,20 +82,48 @@ public class AutoNetZone extends OpMode
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
-    //FSM TEST STUFF
+    public boolean loopDone = false;
     int extendTime = 400;
     int transferTime = 2000;
     int dropTime = 1000;
+    int grabTime = 2500;
+
+    public enum IntakeState {
+        INTAKE_START,
+        INTAKE_EXTEND,
+        INTAKE_GRAB,
+        INTAKE_RETRACT,
+        INTAKE_IDLE
+    };
 
     public enum OuttakeState {
         OUTTAKE_START,
         OUTTAKE_EXTEND,
-        OUTTAKE_OPEN,
-        OUTTAKE_CLOSE,
-        OUTTAKE_RETRACT
+        OUTTAKE_SWIVEL,
+        OUTTAKE_IDLE
     };
 
-    public OuttakeState outtakeState = AutoNetZone.OuttakeState.OUTTAKE_START;
+    public enum TransferState {
+        TRANSFER_START,
+        TRANSFER_INTAKE,
+        TRANSFER_CLAW,
+        TRANSFER_OUTTAKE,
+        TRANSFER_IDLE
+    };
+
+    public enum OuttakeState2 {
+        OUTTAKE2_START,
+        OUTTAKE2_RETRACT,
+        OUTTAKE2_IDLE
+    }
+    public IntakeState intakeState = IntakeState.INTAKE_START;
+    public ElapsedTime intakeTimer = new ElapsedTime();
+    public OuttakeState outtakeState = OuttakeState.OUTTAKE_START;
+    public ElapsedTime outtakeTimer = new ElapsedTime();
+    public TransferState transferState = TransferState.TRANSFER_START;
+    public ElapsedTime transferTimer = new ElapsedTime();
+    public OuttakeState2 outtakeState2 = OuttakeState2.OUTTAKE2_START;
+    public ElapsedTime outtakeTimer2 = new ElapsedTime();
 
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -121,33 +142,43 @@ public class AutoNetZone extends OpMode
                 .build();
 
         n.scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup1Pose), new Point(n.scorePose)))
-                .setLinearHeadingInterpolation(n.pickup1Pose.getHeading(), n.scorePose.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup1Pose), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup1Pose.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.pickup2Pose)))
-                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.pickup2Pose.getHeading())
+                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup2Pose)))
+                .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup2Pose.getHeading())
                 .build();
 
         n.scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup2Pose), new Point(n.scorePose)))
-                .setLinearHeadingInterpolation(n.pickup2Pose.getHeading(), n.scorePose.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup2Pose), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup2Pose.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.pickup3Pose)))
-                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.pickup3Pose.getHeading())
+                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup3Pose)))
+                .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup3Pose.getHeading())
                 .build();
 
         n.scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup3Pose), new Point(n.scorePose)))
-                .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.scorePose.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup3Pose), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.scorePosePT1.getHeading())
+                .build();
+
+        n.scorePickupPT1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.scorePosePT2)))
+                .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.scorePosePT2.getHeading())
+                .build();
+
+        n.scorePickupPT2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.scorePosePT2), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.scorePosePT2.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.park = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePose), new Point(n.parkPose)))
-                .setLinearHeadingInterpolation(n.scorePose.getHeading(), n.parkPose.getHeading())
+                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.parkPose)))
+                .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.parkPose.getHeading())
                 .build();
 
     }
@@ -159,59 +190,115 @@ public class AutoNetZone extends OpMode
     {
         switch (pathState)
         {
+            //Drive from start to rung.
             case 0:
                 follower.followPath(n.scorePreload);
                 setPathState(1);
                 break;
+            //Score preload. Then, drive to pickupPos 1.
             case 1:
                 if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1)) {
-                    /* Score Preload */
 
-                    //claw.scoringClaw();
-                    //claw.openClaw();
+                    /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(n.grabPickup1, /* holdEnd = */ holdPos);
+
                     setPathState(2);
                 }
                 break;
+            //Pickup sample 1. Then, drive to scorePosPT1, while simultaneously transferring.
             case 2:
                 if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1)) {
 
-                    //Grab Sample 1
+                    intakeState = IntakeState.INTAKE_START;
+                    setPathState(100);
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                }
+                break;
+            case 100:
+                if (intakeState != IntakeState.INTAKE_IDLE){
+                    GrabSample();
+                } else {
+                    transferState = TransferState.TRANSFER_START;
+                    setPathState(101);
+                }
+                break;
+            case 101:
+                if (transferState != TransferState.TRANSFER_IDLE){
+                    Transfer();
+                } else {
                     follower.followPath(n.scorePickup1, /* holdEnd = */ holdPos);
                     setPathState(3);
                 }
                 break;
+            //Raise vertical slides to position. Then, drive forward to scorePosPT2.
             case 3:
-                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1)) {
 
-                    //Score Sample
+                    outtakeState = OuttakeState.OUTTAKE_START;
+                    setPathState(102);
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.grabPickup2, /* holdEnd = */ holdPos);
+                }
+                break;
+            case 102:
+                if (outtakeState != OuttakeState.OUTTAKE_IDLE){
+                    ScoreSamplePT1();
+                } else {
+                    follower.followPath(n.scorePickupPT2, /* holdEnd = */ holdPos);
                     setPathState(4);
                 }
                 break;
+            //Open Claw. Then, drive back to scorePosPT1.
+            case 4:
+                clawTarget = po.CLAW_OPEN;
+                if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1)) {
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(n.scorePickupPT1, /* holdEnd = */ holdPos);
+
+                    setPathState(5);
+                }
+                break;
+            //Retract vert slides. Then, drive to pickup sample 2.
+            case 5:
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1)) {
+
+                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
+                    setPathState(103);
+                }
+                break;
+
+            case 103:
+                if (outtakeState2 != OuttakeState2.OUTTAKE2_IDLE){
+                    ScoreSamplePT2();
+                } else {
+                    follower.followPath(n.grabPickup2, /* holdEnd = */ holdPos);
+
+                    setPathState(6);
+                }
+                break;
+            /*
+            //Pickup sample 2. Then, drive to scorePT1.
             case 4:
                 if(follower.getPose().getX() > (n.pickup2Pose.getX() - 1) && follower.getPose().getY() > (n.pickup2Pose.getY() - 1)) {
 
                     //Grab Sample 2
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.scorePickup2, /* holdEnd = */ holdPos);
+                    ///Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
+                    follower.followPath(n.scorePickup2, holdPos);
                     setPathState(5);
                 }
                 break;
+
             case 5:
                 if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
 
                     //Score Sample
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.grabPickup3, /* holdEnd = */ holdPos);
+                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
+                    follower.followPath(n.grabPickup3, holdPos);
                     setPathState(6);
                 }
                 break;
@@ -220,19 +307,20 @@ public class AutoNetZone extends OpMode
 
                     //Grab Sample 3
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.scorePickup3, /* holdEnd = */ holdPos);
+                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
+                    follower.followPath(n.scorePickup3, holdPos);
                     setPathState(7);
                 }
                 break;
             case 7:
                 if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.park, /* holdEnd = */ holdPos);
+                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
+                    follower.followPath(n.park, holdPos);
                     setPathState(0);
                 }
                 break;
+                */
         }
     }
 
@@ -254,14 +342,7 @@ public class AutoNetZone extends OpMode
         //Set powers
         setV4BPIDF(V4BTarget);
         setSwivelPIDF(swivelTarget);
-
-        if (usePIDFvertical) {
-            setVerticalSlidesPIDF(vertSlidesTarget);
-        } else {
-            r.bottomVertical.setPower(botVerticalPower);
-            r.topVertical.setPower(topVerticalPower);
-        }
-
+        setVerticalSlidesPIDF(vertSlidesTarget);
         r.rightLinear.setPosition(rightLinearTarget);
         r.leftLinear.setPosition(leftLinearTarget);
         r.claw.setPosition(clawTarget);
@@ -317,6 +398,7 @@ public class AutoNetZone extends OpMode
         double botVerticalPower = 0;
         double topVerticalPower = 0;
         double intakePower = 0;
+
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
@@ -336,45 +418,115 @@ public class AutoNetZone extends OpMode
     public void stop() {
     }
 
-    //Subsystems
+    //TeleOp Loops
 
-    public void scoreSample1()
-    {
-        switch (outtakeState)
-        {
-            case OUTTAKE_START:
-                vertSlidesTarget = po.VERTICAL_UP;
-                outtakeState = AutoNetZone.OuttakeState.OUTTAKE_EXTEND;
-                break;
-            case OUTTAKE_EXTEND:
-                if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
-                    swivelTarget = po.SWIVEL_UP;
-                    outtakeState = OuttakeState.OUTTAKE_OPEN;
-                }
-                break;
-        }
+    //Score Preload
+
+    //GrabSample
+    public void GrabSample() {
+            switch (intakeState) {
+                case INTAKE_START:
+                        leftLinearTarget = po.LEFT_SLIDE_OUT;
+                        rightLinearTarget = po.RIGHT_SLIDE_OUT;
+                        intakeTimer.reset();
+                        intakeState = IntakeState.INTAKE_EXTEND;
+                        break;
+                case INTAKE_EXTEND:
+                    if (intakeTimer.milliseconds() >= extendTime) {
+                        intakePower = po.INTAKE_POWER_IN;
+                        V4BTarget = po.V4B_INTAKE_POS;
+                        intakeTimer.reset();
+                        intakeState = IntakeState.INTAKE_GRAB;
+                    }
+                    break;
+                case INTAKE_GRAB:
+                    if (intakeTimer.milliseconds() >= grabTime) {
+                        intakePower = 0;
+                        V4BTarget = po.V4B_REST_POS;
+                        leftLinearTarget = po.LEFT_SLIDE_IN;
+                        rightLinearTarget = po.RIGHT_SLIDE_IN;
+                        intakeTimer.reset();
+                        intakeState = IntakeState.INTAKE_RETRACT;
+                    }
+                    break;
+                case INTAKE_RETRACT:
+                    if (intakeTimer.milliseconds() >= extendTime) {
+                        intakeState = IntakeState.INTAKE_IDLE;
+                    }
+                    break;
+            }
     }
-    public void scoreSample2()
-    {
 
-        switch (outtakeState)
-        {
-            case OUTTAKE_OPEN:
-                outtakeTimer.reset();
-                clawTarget = po.CLAW_OPEN;
-                outtakeState = OuttakeState.OUTTAKE_CLOSE;
-            break;
-            case OUTTAKE_CLOSE:
-                if (outtakeTimer.milliseconds() >= 1000)
-                {
+    public void Transfer(){
+            switch (transferState) {
+                case TRANSFER_START:
+                        leftLinearTarget = po.LEFT_SLIDE_IN;
+                        rightLinearTarget = po.RIGHT_SLIDE_IN;
+                        V4BTarget = po.V4B_TRANSFER_POS;
+                        transferState = TransferState.TRANSFER_INTAKE;
+                        break;
+                case TRANSFER_INTAKE:
+                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) < 10) {
+                        clawTarget = po.CLAW_OPEN;
+                        vertSlidesTarget = po.VERTICAL_DOWN;
+                        transferState = TransferState.TRANSFER_CLAW;
+                    }
+                    break;
+                case TRANSFER_CLAW:
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) < 50) {
+                        clawTarget = po.CLAW_CLOSED;
+                        vertSlidesTarget = po.VERTICAL_REST;
+                        transferState = TransferState.TRANSFER_OUTTAKE;
+                    }
+                    break;
+                case TRANSFER_OUTTAKE:
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                        transferState = TransferState.TRANSFER_IDLE;
+                    }
+                    break;
+            }
+    }
+
+    //ScoreSample
+    public void ScoreSamplePT1() {
+            switch (outtakeState) {
+                case OUTTAKE_START:
+                    vertSlidesTarget = po.VERTICAL_UP;
+                    outtakeState = OuttakeState.OUTTAKE_EXTEND;
+                    break;
+                case OUTTAKE_EXTEND:
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
+                        swivelTarget = po.SWIVEL_UP;
+                        wristTarget = po.WRIST_PERP;
+                        outtakeTimer.reset();
+                        outtakeState = OuttakeState.OUTTAKE_SWIVEL;
+                    }
+                    break;
+                case OUTTAKE_SWIVEL:
+                    if (outtakeTimer.milliseconds() >= extendTime) {
+                        outtakeState = OuttakeState.OUTTAKE_IDLE;
+                    }
+                    break;
+            }
+    }
+
+    public void ScoreSamplePT2() {
+            switch (outtakeState2) {
+                case OUTTAKE2_START:
                     clawTarget = po.CLAW_CLOSED;
-
-                    //Swivel back
-
-                    //Slides down
-                }
-        }
+                    wristTarget = po.WRIST_PAR;
+                    swivelTarget = po.SWIVEL_DOWN;
+                    vertSlidesTarget = po.VERTICAL_REST;
+                    outtakeState2 = OuttakeState2.OUTTAKE2_RETRACT;
+                    break;
+                case OUTTAKE2_RETRACT:
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                        outtakeState2 = OuttakeState2.OUTTAKE2_IDLE;
+                    }
+                    break;
+            }
     }
+
 
     public void setV4BPIDF(int target)
     {
