@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.OpModes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -13,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyPositions;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClass;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClassAuto;
@@ -22,6 +24,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
 import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPositionsNet;
@@ -37,7 +40,6 @@ public class AutoNetZone extends OpMode
     AutoPositionsNet n = new AutoPositionsNet();
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-    private int pathState;
     public boolean holdPos = true;
 
 
@@ -88,6 +90,41 @@ public class AutoNetZone extends OpMode
     int dropTime = 1000;
     int grabTime = 2500;
 
+    public PathState pathState;
+    public enum PathState {
+        ToPRELOAD,
+        ScorePRELOAD,
+
+        //Sample 1
+        ToPICKUP1,
+        PICKUP1,
+        ToSCORE1a,
+        RaiseSLIDES1,
+        ToSCORE1b,
+        OpenCLAW1,
+        ToSCORE1c,
+        RETRACT1,
+
+        //Sample 1
+        ToPICKUP2,
+        PICKUP2,
+        ToSCORE2a,
+        RaiseSLIDES2,
+        ToSCORE2b,
+        OpenCLAW2,
+        ToSCORE2c,
+        RETRACT2,
+
+        //Sample 1
+        ToPICKUP3,
+        PICKUP3,
+        ToSCORE3a,
+        RaiseSLIDES3,
+        ToSCORE3b,
+        OpenCLAW3,
+        ToSCORE3c,
+        RETRACT3,
+    }
     public enum IntakeState {
         INTAKE_START,
         INTAKE_EXTEND,
@@ -137,7 +174,7 @@ public class AutoNetZone extends OpMode
                 .build();
 
         n.grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(n.preloadPose), /* Control Point */ new Point(n.pickup1ControlPose), new Point(n.pickup1Pose)))
+                .addPath(new BezierLine(new Point(n.preloadPose), new Point(n.pickup1Pose)))
                 .setLinearHeadingInterpolation(n.preloadPose.getHeading(), n.pickup1Pose.getHeading())
                 .build();
 
@@ -190,145 +227,105 @@ public class AutoNetZone extends OpMode
     {
         switch (pathState)
         {
-            //Drive from start to rung.
-            case 0:
-                follower.followPath(n.scorePreload);
-                setPathState(1);
-                break;
-            //Score preload. Then, drive to pickupPos 1.
-            case 1:
-                if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1)) {
 
-                    /* Score Preload */
+            //PRELOAD CHAIN
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.grabPickup1, /* holdEnd = */ holdPos);
+            case ToPRELOAD:
 
-                    setPathState(2);
+                follower.followPath(n.scorePreload, holdPos);
+
+                if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1))
+                {
+                    pathState = PathState.ScorePRELOAD;
                 }
                 break;
-            //Pickup sample 1. Then, drive to scorePosPT1, while simultaneously transferring.
-            case 2:
-                if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1)) {
+            case ScorePRELOAD:
 
-                    intakeState = IntakeState.INTAKE_START;
-                    setPathState(100);
+                //Score Preload Here
 
+                if(1==1 /*Score successful*/)
+                {
+                    pathState = PathState.ToPICKUP1;
                 }
                 break;
-            case 100:
-                if (intakeState != IntakeState.INTAKE_IDLE){
-                    GrabSample();
-                } else {
-                    transferState = TransferState.TRANSFER_START;
-                    setPathState(101);
-                }
-                break;
-            case 101:
-                if (transferState != TransferState.TRANSFER_IDLE){
-                    Transfer();
-                } else {
-                    follower.followPath(n.scorePickup1, /* holdEnd = */ holdPos);
-                    setPathState(3);
-                }
-                break;
-            //Raise vertical slides to position. Then, drive forward to scorePosPT2.
-            case 3:
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1)) {
 
-                    outtakeState = OuttakeState.OUTTAKE_START;
-                    setPathState(102);
+            //SAMPLE 1 CHAIN
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+            case ToPICKUP1:
+
+                follower.followPath(n.grabPickup1, holdPos);
+
+                if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1))
+                {
+                    pathState = PathState.PICKUP1;
                 }
                 break;
-            case 102:
-                if (outtakeState != OuttakeState.OUTTAKE_IDLE){
-                    ScoreSamplePT1();
-                } else {
-                    follower.followPath(n.scorePickupPT2, /* holdEnd = */ holdPos);
-                    setPathState(4);
+            case PICKUP1:
+
+                GrabSample();
+
+                if (intakeState == IntakeState.INTAKE_IDLE)
+                {
+                    pathState = PathState.ToSCORE1a;
                 }
                 break;
-            //Open Claw. Then, drive back to scorePosPT1.
-            case 4:
+            case ToSCORE1a:
+
+                follower.followPath(n.scorePickup1, holdPos);
+                Transfer();
+
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
+                {
+                    pathState = PathState.RaiseSLIDES1;
+                }
+                break;
+            case RaiseSLIDES1:
+
+                ScoreSamplePT1();
+
+                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
+                {
+                    pathState = PathState.ToSCORE1b;
+                }
+                break;
+            case ToSCORE1b:
+
+                follower.followPath(n.scorePickupPT1, holdPos);
+
+                if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1))
+                {
+                    pathState = PathState.OpenCLAW1;
+                }
+                break;
+            case OpenCLAW1:
+
+                pathTimer.resetTimer();
                 clawTarget = po.CLAW_OPEN;
-                if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1)) {
 
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(n.scorePickupPT1, /* holdEnd = */ holdPos);
-
-                    setPathState(5);
+                if (pathTimer.getElapsedTime() >= 200)
+                {
+                    pathState = PathState.ToSCORE1c;
                 }
                 break;
-            //Retract vert slides. Then, drive to pickup sample 2.
-            case 5:
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1)) {
+            case ToSCORE1c:
 
-                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
-                    setPathState(103);
+                follower.followPath(n.scorePickupPT2, holdPos);
+
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1))
+                {
+                    pathState = PathState.RETRACT1;
                 }
                 break;
+            case RETRACT1:
 
-            case 103:
-                if (outtakeState2 != OuttakeState2.OUTTAKE2_IDLE){
-                    ScoreSamplePT2();
-                } else {
-                    follower.followPath(n.grabPickup2, /* holdEnd = */ holdPos);
+                ScoreSamplePT2();
 
-                    setPathState(6);
+                if (outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
+                {
+                    pathState = PathState.ToPICKUP2;
                 }
                 break;
-            /*
-            //Pickup sample 2. Then, drive to scorePT1.
-            case 4:
-                if(follower.getPose().getX() > (n.pickup2Pose.getX() - 1) && follower.getPose().getY() > (n.pickup2Pose.getY() - 1)) {
-
-                    //Grab Sample 2
-
-                    ///Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
-                    follower.followPath(n.scorePickup2, holdPos);
-                    setPathState(5);
-                }
-                break;
-
-            case 5:
-                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
-
-                    //Score Sample
-
-                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
-                    follower.followPath(n.grabPickup3, holdPos);
-                    setPathState(6);
-                }
-                break;
-            case 6:
-                if(follower.getPose().getX() > (n.pickup3Pose.getX() - 1) && follower.getPose().getY() > (n.pickup3Pose.getY() - 1)) {
-
-                    //Grab Sample 3
-
-                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
-                    follower.followPath(n.scorePickup3, holdPos);
-                    setPathState(7);
-                }
-                break;
-            case 7:
-                if(follower.getPose().getX() > (n.scorePose.getX() - 1) && follower.getPose().getY() > (n.scorePose.getY() - 1)) {
-
-                    //Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample
-                    follower.followPath(n.park, holdPos);
-                    setPathState(0);
-                }
-                break;
-                */
         }
-    }
-
-    /** These change the states of the paths and actions
-     * It will also reset the timers of the individual switches **/
-    public void setPathState(int pState) {
-        pathState = pState;
-        pathTimer.resetTimer();
     }
 
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
@@ -353,7 +350,12 @@ public class AutoNetZone extends OpMode
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
+
+        //TelemetryPacket packet = new TelemetryPacket();
+        //packet.fieldOverlay().setStroke("#3F51B5");
+        //Drawing.drawRobot(packet.fieldOverlay(), follower.getPose());
+
         telemetry.update();
     }
 
@@ -410,7 +412,7 @@ public class AutoNetZone extends OpMode
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        setPathState(0);
+        pathState = PathState.ToPRELOAD;
     }
 
     /** We do not use this because everything should automatically disable **/
@@ -418,11 +420,6 @@ public class AutoNetZone extends OpMode
     public void stop() {
     }
 
-    //TeleOp Loops
-
-    //Score Preload
-
-    //GrabSample
     public void GrabSample() {
             switch (intakeState) {
                 case INTAKE_START:
