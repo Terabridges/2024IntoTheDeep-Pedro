@@ -67,7 +67,7 @@ public class AutoNetZone extends OpMode
     public static double p = 0.005, i = 0.01, d = 0.00004;
     public static double f = 0.06;
     private final double ticks_in_degree = 144.0 / 180.0;
-    public static int V4BTarget;
+    public int V4BTarget;
     double armPos;
     double pid, targetArmAngle, ff, currentArmAngle, V4BPower;
 
@@ -76,7 +76,7 @@ public class AutoNetZone extends OpMode
     public static double p2 = 0.006, i2 = 0.001, d2 = 0;
     public static double f2 = 0;
     private final double ticks_in_degree2 = 144.0 / 180.0;
-    public static int vertSlidesTarget;
+    public int vertSlidesTarget;
     double armPos2;
     double pid2, targetArmAngle2, ff2, currentArmAngle2, verticalSlidesPower;
 
@@ -85,15 +85,16 @@ public class AutoNetZone extends OpMode
     public static double p3 = -0.006, i3 = 0.02, d3 = 0.0002;
     public static double f3 = 0.035;
     private final double ticks_in_degree3 = 144.0 / 180.0;
-    public static int swivelTarget;
+    public int swivelTarget;
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
+    public int TimeVar = 100;
     public boolean loopDone = false;
     int extendTime = 400;
     int transferTime = 2000;
     int dropTime = 1000;
-    int grabTime = 2500;
+    int grabTime = 1800;
 
     public PathState pathState;
     public enum PathState {
@@ -129,6 +130,8 @@ public class AutoNetZone extends OpMode
         OpenCLAW3,
         ToSCORE3c,
         RETRACT3,
+
+        TRANSFER
     }
     public enum IntakeState {
         INTAKE_START,
@@ -158,13 +161,13 @@ public class AutoNetZone extends OpMode
         OUTTAKE2_RETRACT,
         OUTTAKE2_IDLE
     }
-    public IntakeState intakeState = IntakeState.INTAKE_START;
+    public IntakeState intakeState = IntakeState.INTAKE_IDLE;
     public ElapsedTime intakeTimer = new ElapsedTime();
-    public OuttakeState outtakeState = OuttakeState.OUTTAKE_START;
+    public OuttakeState outtakeState = OuttakeState.OUTTAKE_IDLE;
     public ElapsedTime outtakeTimer = new ElapsedTime();
-    public TransferState transferState = TransferState.TRANSFER_START;
+    public TransferState transferState = TransferState.TRANSFER_IDLE;
     public ElapsedTime transferTimer = new ElapsedTime();
-    public OuttakeState2 outtakeState2 = OuttakeState2.OUTTAKE2_START;
+    public OuttakeState2 outtakeState2 = OuttakeState2.OUTTAKE2_IDLE;
     public ElapsedTime outtakeTimer2 = new ElapsedTime();
 
 
@@ -208,12 +211,12 @@ public class AutoNetZone extends OpMode
                 .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
-        n.scorePickupPT1 = follower.pathBuilder()
+        n.scoreForward = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.scorePosePT2)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.scorePosePT2.getHeading())
                 .build();
 
-        n.scorePickupPT2 = follower.pathBuilder()
+        n.scoreRetreat = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(n.scorePosePT2), new Point(n.scorePosePT1)))
                 .setLinearHeadingInterpolation(n.scorePosePT2.getHeading(), n.scorePosePT1.getHeading())
                 .build();
@@ -239,94 +242,90 @@ public class AutoNetZone extends OpMode
 
                 follower.followPath(n.scorePreload, holdPos);
 
-                if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1))
-                {
-                    pathState = PathState.ScorePRELOAD;
-                }
+                pathState = PathState.ScorePRELOAD;
+
                 break;
             case ScorePRELOAD:
-
-                //Score Preload Here
-
-                if(1==1 /*Score successful*/)
+                if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1))
                 {
+                    //Score Preload Here
+
                     pathState = PathState.ToPICKUP1;
                 }
+
                 break;
 
             //SAMPLE 1 CHAIN
 
             case ToPICKUP1:
-
-                follower.followPath(n.grabPickup1, holdPos);
-
-                if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1))
+                if(1==1 /*Score successful*/)
                 {
+                    follower.followPath(n.grabPickup1, holdPos);
+
                     pathState = PathState.PICKUP1;
                 }
+
                 break;
             case PICKUP1:
-
-                GrabSample();
-
-                if (intakeState == IntakeState.INTAKE_IDLE)
+                if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1))
                 {
+                    intakeState = IntakeState.INTAKE_START;
+
+                    pathState = PathState.TRANSFER;
+                }
+                break;
+            case TRANSFER:
+                if (intakeState == IntakeState.INTAKE_IDLE) {
+                    transferState = TransferState.TRANSFER_START;
                     pathState = PathState.ToSCORE1a;
                 }
                 break;
             case ToSCORE1a:
-
-                follower.followPath(n.scorePickup1, holdPos);
-                Transfer();
-
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
+                if (transferState == TransferState.TRANSFER_IDLE)
                 {
+                    follower.followPath(n.scorePickup1, holdPos);
+
                     pathState = PathState.RaiseSLIDES1;
                 }
                 break;
             case RaiseSLIDES1:
-
-                ScoreSamplePT1();
-
-                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
                 {
+                    outtakeState = OuttakeState.OUTTAKE_START;
+
                     pathState = PathState.ToSCORE1b;
                 }
                 break;
             case ToSCORE1b:
-
-                follower.followPath(n.scorePickupPT1, holdPos);
-
-                if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1))
+                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
                 {
+                    follower.followPath(n.scoreForward);
+
                     pathState = PathState.OpenCLAW1;
                 }
                 break;
             case OpenCLAW1:
-
-                pathTimer.resetTimer();
-                clawTarget = po.CLAW_OPEN;
-
-                if (pathTimer.getElapsedTime() >= 200)
+                if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1))
                 {
+                    pathTimer.resetTimer();
+                    clawTarget = po.CLAW_OPEN;
+
                     pathState = PathState.ToSCORE1c;
                 }
                 break;
             case ToSCORE1c:
-
-                follower.followPath(n.scorePickupPT2, holdPos);
-
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1))
+                if (pathTimer.getElapsedTime() >= 400)
                 {
+                    follower.followPath(n.scoreRetreat);
+
                     pathState = PathState.RETRACT1;
                 }
                 break;
             case RETRACT1:
-
-                ScoreSamplePT2();
-
-                if (outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1))
                 {
+                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
+
                     pathState = PathState.ToPICKUP2;
                 }
                 break;
@@ -341,25 +340,34 @@ public class AutoNetZone extends OpMode
         follower.update();
         autonomousPathUpdate();
 
+        GrabSample();
+        Transfer();
+        ScoreSamplePT1();
+        ScoreSamplePT2();
+
         //Set powers
-//        setV4BPIDF(V4BTarget);
-//        setSwivelPIDF(swivelTarget);
-//        setVerticalSlidesPIDF(vertSlidesTarget);
-//        r.rightLinear.setPosition(rightLinearTarget);
-//        r.leftLinear.setPosition(leftLinearTarget);
-//        r.claw.setPosition(clawTarget);
-//        r.wrist.setPosition(wristTarget);
-//        r.intake.setPower(intakePower);
+        setV4BPIDF(V4BTarget);
+        setSwivelPIDF(swivelTarget);
+        setVerticalSlidesPIDF(vertSlidesTarget);
+        r.rightLinear.setPosition(rightLinearTarget);
+        r.leftLinear.setPosition(leftLinearTarget);
+        r.claw.setPosition(clawTarget);
+        r.wrist.setPosition(wristTarget);
+        r.intake.setPower(intakePower);
 
         // Feedback to Driver Hub
-        telemetry.addData("path state", pathState);
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
-        telemetry.addData("intake state", intakeState);
+//        telemetry.addData("AA Intake Timer", intakeTimer.milliseconds());
+//        telemetry.addData("V4B Target", targetArmAngle);
+//        telemetry.addData("V4B Current Pos", currentArmAngle);
+//        telemetry.addData("V4B Power", V4BPower);
+//        telemetry.addData("path state", pathState);
+//        telemetry.addData("x", follower.getPose().getX());
+//        telemetry.addData("y", follower.getPose().getY());
+//        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
+//        telemetry.addData("intake state", intakeState);
         telemetry.addData("transfer state", transferState);
-        telemetry.addData("outtake1 state", outtakeState);
-        telemetry.addData("outtake2 state", outtakeState2);
+//        telemetry.addData("outtake1 state", outtakeState);
+//        telemetry.addData("outtake2 state", outtakeState2);
 
         //TelemetryPacket packet = new TelemetryPacket();
         //packet.fieldOverlay().setStroke("#3F51B5");
@@ -445,20 +453,29 @@ public class AutoNetZone extends OpMode
                         break;
                 case INTAKE_EXTEND:
                     if (intakeTimer.milliseconds() >= extendTime) {
-                        intakePower = po.INTAKE_POWER_IN;
+                        intakePower = -0.25;
                         V4BTarget = po.V4B_INTAKE_POS;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_GRAB;
                     }
                     break;
                 case INTAKE_GRAB:
-                    if (intakeTimer.milliseconds() >= grabTime) {
+                    if (intakeTimer.milliseconds() >= grabTime+TimeVar) {
+                        r.LB.setPower(0);
+                        r.LF.setPower(0);
+                        r.RB.setPower(0);
+                        r.RF.setPower(0);
                         intakePower = 0;
                         V4BTarget = po.V4B_REST_POS;
                         leftLinearTarget = po.LEFT_SLIDE_IN;
                         rightLinearTarget = po.RIGHT_SLIDE_IN;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_RETRACT;
+                    } else {
+                        r.LB.setPower(0.35);
+                        r.LF.setPower(0.35);
+                        r.RB.setPower(0.35);
+                        r.RF.setPower(0.35);
                     }
                     break;
                 case INTAKE_RETRACT:
@@ -478,21 +495,21 @@ public class AutoNetZone extends OpMode
                         transferState = TransferState.TRANSFER_INTAKE;
                         break;
                 case TRANSFER_INTAKE:
-                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) < 10) {
+                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= 10) {
                         clawTarget = po.CLAW_OPEN;
                         vertSlidesTarget = po.VERTICAL_DOWN;
                         transferState = TransferState.TRANSFER_CLAW;
                     }
                     break;
                 case TRANSFER_CLAW:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) < 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
                         clawTarget = po.CLAW_CLOSED;
                         vertSlidesTarget = po.VERTICAL_REST;
                         transferState = TransferState.TRANSFER_OUTTAKE;
                     }
                     break;
                 case TRANSFER_OUTTAKE:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
                         transferState = TransferState.TRANSFER_IDLE;
                     }
                     break;
@@ -504,18 +521,17 @@ public class AutoNetZone extends OpMode
             switch (outtakeState) {
                 case OUTTAKE_START:
                     vertSlidesTarget = po.VERTICAL_UP;
+                    swivelTarget = po.SWIVEL_UP;
+                    wristTarget = po.WRIST_PERP;
+                    outtakeTimer.reset();
                     outtakeState = OuttakeState.OUTTAKE_EXTEND;
                     break;
                 case OUTTAKE_EXTEND:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
-                        swivelTarget = po.SWIVEL_UP;
-                        wristTarget = po.WRIST_PERP;
-                        outtakeTimer.reset();
                         outtakeState = OuttakeState.OUTTAKE_SWIVEL;
-                    }
+
                     break;
                 case OUTTAKE_SWIVEL:
-                    if (outtakeTimer.milliseconds() >= extendTime) {
+                    if (outtakeTimer.milliseconds() >= extendTime+1300) {
                         outtakeState = OuttakeState.OUTTAKE_IDLE;
                     }
                     break;
@@ -532,7 +548,7 @@ public class AutoNetZone extends OpMode
                     outtakeState2 = OuttakeState2.OUTTAKE2_RETRACT;
                     break;
                 case OUTTAKE2_RETRACT:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
                         outtakeState2 = OuttakeState2.OUTTAKE2_IDLE;
                     }
                     break;
@@ -553,6 +569,8 @@ public class AutoNetZone extends OpMode
 
         r.leftArm.setPower(V4BPower);
         r.rightArm.setPower(V4BPower);
+
+        //Telemetry
     }
 
     public void setVerticalSlidesPIDF(int target2)

@@ -312,7 +312,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case OUTTAKE_EXTEND:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) < 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) <= 50) {
                             swivelTarget = po.SWIVEL_UP;
                             wristTarget = po.WRIST_PERP;
                             outtakeState = OuttakeState.OUTTAKE_SWIVEL;
@@ -355,7 +355,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case OUTTAKE_RETRACT:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
                             outtakeState = OuttakeState.OUTTAKE_START;
 
                         }
@@ -378,21 +378,21 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case TRANSFER_INTAKE:
-                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) < 10) {
+                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= 10) {
                             clawTarget = po.CLAW_OPEN;
                             vertSlidesTarget = po.VERTICAL_DOWN;
                             transferState = TransferState.TRANSFER_CLAW;
                         }
                         break;
                     case TRANSFER_CLAW:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) < 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
                             clawTarget = po.CLAW_CLOSED;
                             vertSlidesTarget = po.VERTICAL_REST;
                             transferState = TransferState.TRANSFER_OUTTAKE;
                         }
                         break;
                     case TRANSFER_OUTTAKE:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) < 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
                             transferState = TransferState.TRANSFER_START;
                         }
                         break;

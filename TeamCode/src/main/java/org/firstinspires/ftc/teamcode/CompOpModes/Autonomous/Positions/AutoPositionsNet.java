@@ -18,12 +18,12 @@ public class AutoPositionsNet
     /* Place preload on rung */
     public Pose preloadPose = new Pose(30, 80.5, Math.toRadians(180));
 
-    public Pose scorePosePT1 = new Pose(14, 120, Math.toRadians(-36));
+    public Pose scorePosePT1 = new Pose(15, 112, Math.toRadians(-36));
 
-    public Pose scorePosePT2 = new Pose(16, 120, Math.toRadians(-36));
+    public Pose scorePosePT2 = new Pose(13, 119, Math.toRadians(-36));
 
     /* Lowest (First) Sample from the Spike Mark */
-    public Pose pickup1Pose = new Pose(35, 98, Math.toRadians(65));
+    public Pose pickup1Pose = new Pose(31.85, 86.35, Math.toRadians(73));
     //Control pose for curve
     //public static Pose pickup1ControlPose = new Pose(30, 110, Math.toRadians(87));
 
@@ -37,5 +37,5 @@ public class AutoPositionsNet
     public Pose parkPose = new Pose(20, 124, Math.toRadians(135));
 
     /** These are our Paths and PathChains that we will define in buildPaths() */
-    public PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3, scorePickupPT1, scorePickupPT2, park;
+    public PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3, scoreForward, scoreRetreat, park;
 }
