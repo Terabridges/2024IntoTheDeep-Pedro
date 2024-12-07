@@ -308,15 +308,13 @@ public class ShoddyTeleOp extends LinearOpMode {
                         if (t.currentGamepad1.y && !t.previousGamepad1.y){
                             usePIDFvertical = true;
                             vertSlidesTarget = po.VERTICAL_UP;
+                            swivelTarget = po.SWIVEL_UP;
+                            wristTarget = po.WRIST_PERP;
                             outtakeState = OuttakeState.OUTTAKE_EXTEND;
                         }
                         break;
                     case OUTTAKE_EXTEND:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_UP) <= 50) {
-                            swivelTarget = po.SWIVEL_UP;
-                            wristTarget = po.WRIST_PERP;
                             outtakeState = OuttakeState.OUTTAKE_SWIVEL;
-                        }
                         break;
                     case OUTTAKE_SWIVEL:
                         if (t.currentGamepad1.y && !t.previousGamepad1.y) {
