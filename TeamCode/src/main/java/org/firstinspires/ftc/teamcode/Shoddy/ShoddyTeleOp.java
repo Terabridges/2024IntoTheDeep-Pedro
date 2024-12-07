@@ -117,7 +117,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
 
-        r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         V4BTarget = po.V4B_TRANSFER_POS;
         vertSlidesTarget = po.VERTICAL_REST;

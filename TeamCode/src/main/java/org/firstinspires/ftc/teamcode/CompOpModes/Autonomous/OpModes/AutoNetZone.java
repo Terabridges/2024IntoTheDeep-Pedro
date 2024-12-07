@@ -22,9 +22,11 @@ import org.firstinspires.ftc.teamcode.Shoddy.ShoddyTeleOp;
 import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.DashboardPoseTracker;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
@@ -46,6 +48,9 @@ public class AutoNetZone extends OpMode
     public int xOffset;
     public int yOffset;
     public int hOffset;
+
+    private PoseUpdater poseUpdater;
+    private DashboardPoseTracker dashboardPoseTracker;
 
     //Other Shit
 
@@ -98,8 +103,13 @@ public class AutoNetZone extends OpMode
 
     public PathState pathState;
     public enum PathState {
+        //Preload
         ToPRELOAD,
-        ScorePRELOAD,
+        RaiseSLIDESp,
+        FORWARDp,
+        OpenCLAWp,
+        RETREATp,
+        RETRACTp,
 
         //Sample 1
         ToPICKUP1,
@@ -131,7 +141,9 @@ public class AutoNetZone extends OpMode
         ToSCORE3c,
         RETRACT3,
 
-        TRANSFER
+        TRANSFER,
+
+        PARK
     }
     public enum IntakeState {
         INTAKE_START,
@@ -177,13 +189,13 @@ public class AutoNetZone extends OpMode
     {
 
         n.scorePreload = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.startPose), new Point(n.preloadPose)))
-                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.preloadPose.getHeading())
+                .addPath(new BezierLine(new Point(n.startPose), new Point(n.scorePosePT1p)))
+                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.scorePosePT1p.getHeading())
                 .build();
 
         n.grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.preloadPose), new Point(n.pickup1Pose)))
-                .setLinearHeadingInterpolation(n.preloadPose.getHeading(), n.pickup1Pose.getHeading())
+                .addPath(new BezierLine(new Point(n.scorePosePT1p), new Point(n.pickup1Pose)))
+                .setLinearHeadingInterpolation(n.scorePosePT1p.getHeading(), n.pickup1Pose.getHeading())
                 .build();
 
         n.scorePickup1 = follower.pathBuilder()
@@ -225,7 +237,15 @@ public class AutoNetZone extends OpMode
                 .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.parkPose)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.parkPose.getHeading())
                 .build();
+        n.scoreForwardp = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.scorePosePT1p), new Point(n.scorePosePT2p)))
+                .setLinearHeadingInterpolation(n.scorePosePT1p.getHeading(), n.scorePosePT2p.getHeading())
+                .build();
 
+        n.scoreRetreatp = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.scorePosePT2p), new Point(n.scorePosePT1p)))
+                .setLinearHeadingInterpolation(n.scorePosePT2p.getHeading(), n.scorePosePT1p.getHeading())
+                .build();
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -239,26 +259,60 @@ public class AutoNetZone extends OpMode
             //PRELOAD CHAIN
 
             case ToPRELOAD:
-
-                follower.followPath(n.scorePreload, holdPos);
-
-                pathState = PathState.ScorePRELOAD;
-
-                break;
-            case ScorePRELOAD:
-                if(follower.getPose().getX() > (n.preloadPose.getX() - 1) && follower.getPose().getY() > (n.preloadPose.getY() - 1))
+                if (transferState == TransferState.TRANSFER_IDLE)
                 {
-                    //Score Preload Here
+                    follower.followPath(n.scorePreload, holdPos);
+
+                    pathState = PathState.RaiseSLIDESp;
+                }
+                break;
+            case RaiseSLIDESp:
+                if(follower.getPose().getX() > (n.scorePosePT1p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1p.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
+                {
+                    outtakeState = OuttakeState.OUTTAKE_START;
+
+                    pathState = PathState.FORWARDp;
+                }
+                break;
+            case FORWARDp:
+                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
+                {
+                    follower.followPath(n.scoreForwardp);
+
+                    pathState = PathState.OpenCLAWp;
+                }
+                break;
+            case OpenCLAWp:
+                if(follower.getPose().getX() > (n.scorePosePT2p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2p.getY() - 1))
+                {
+                    pathTimer.resetTimer();
+                    clawTarget = po.CLAW_OPEN;
+
+                    pathState = PathState.RETREATp;
+                }
+                break;
+            case RETREATp:
+                if (pathTimer.getElapsedTime() >= 400)
+                {
+                    follower.followPath(n.scoreRetreatp);
+
+                    pathState = PathState.RETRACTp;
+                }
+                break;
+            case RETRACTp:
+                if(follower.getPose().getX() > (n.scorePosePT1p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1p.getY() - 1))
+                {
+                    pathTimer.resetTimer();
+                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
 
                     pathState = PathState.ToPICKUP1;
                 }
-
                 break;
 
             //SAMPLE 1 CHAIN
 
             case ToPICKUP1:
-                if(1==1 /*Score successful*/)
+                if(pathTimer.getElapsedTime() >= 1500)
                 {
                     follower.followPath(n.grabPickup1, holdPos);
 
@@ -324,11 +378,18 @@ public class AutoNetZone extends OpMode
             case RETRACT1:
                 if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1))
                 {
+                    pathTimer.resetTimer();
                     outtakeState2 = OuttakeState2.OUTTAKE2_START;
 
-                    pathState = PathState.ToPICKUP2;
+                    pathState = PathState.PARK;
                 }
                 break;
+//            case PARK:
+//                if(pathTimer.getElapsedTime() >= 2000)
+//                {
+//                    follower.followPath(n.park);
+//                }
+//                break;
         }
     }
 
@@ -339,6 +400,8 @@ public class AutoNetZone extends OpMode
         // These loop the movements of the robot
         follower.update();
         autonomousPathUpdate();
+        poseUpdater.update();
+        dashboardPoseTracker.update();
 
         GrabSample();
         Transfer();
@@ -374,6 +437,10 @@ public class AutoNetZone extends OpMode
         //Drawing.drawRobot(packet.fieldOverlay(), follower.getPose());
 
         telemetry.update();
+
+        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
     }
 
     /** This method is called once at the init of the OpMode. **/
@@ -382,6 +449,11 @@ public class AutoNetZone extends OpMode
         r = new ShoddyRobotClassAuto(this);
         n = new AutoPositionsNet();
         po = new ShoddyPositions();
+        poseUpdater = new PoseUpdater(hardwareMap);
+        dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
+
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
@@ -413,17 +485,21 @@ public class AutoNetZone extends OpMode
 
         leftLinearTarget = po.LEFT_SLIDE_IN;
         rightLinearTarget = po.RIGHT_SLIDE_IN;
-        clawTarget = po.CLAW_CLOSED;
         wristTarget = po.WRIST_PAR;
 
         double botVerticalPower = 0;
         double topVerticalPower = 0;
         double intakePower = 0;
+
+        r.claw.setPosition(0.51);
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
     @Override
-    public void init_loop() {}
+    public void init_loop()
+    {
+        clawTarget = 0.51;
+    }
 
     /** This method is called once at the start of the OpMode.
      * It runs all the setup actions, including building paths and starting the path system **/
@@ -460,7 +536,7 @@ public class AutoNetZone extends OpMode
                     }
                     break;
                 case INTAKE_GRAB:
-                    if (intakeTimer.milliseconds() >= grabTime+TimeVar) {
+                    if (intakeTimer.milliseconds() >= grabTime+TimeVar+200) {
                         r.LB.setPower(0);
                         r.LF.setPower(0);
                         r.RB.setPower(0);
@@ -472,10 +548,10 @@ public class AutoNetZone extends OpMode
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_RETRACT;
                     } else {
-                        r.LB.setPower(0.35);
-                        r.LF.setPower(0.35);
-                        r.RB.setPower(0.35);
-                        r.RF.setPower(0.35);
+                        r.LB.setPower(0.45);
+                        r.LF.setPower(0.45);
+                        r.RB.setPower(0.45);
+                        r.RF.setPower(0.45);
                     }
                     break;
                 case INTAKE_RETRACT:
