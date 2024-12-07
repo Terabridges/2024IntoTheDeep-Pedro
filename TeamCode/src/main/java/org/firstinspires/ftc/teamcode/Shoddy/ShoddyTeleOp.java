@@ -404,22 +404,24 @@ public class ShoddyTeleOp extends LinearOpMode {
             //Swap Direction (X)
             {
                 if (t.toggle("x")) {
-                    if (t.xToggle) {
-                        //Reverse
-                        r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
-                        r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
-                        r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
-                        r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
-                        po.TURN_VAL = -1;
-                        po.reversed = true;
-                    } else {
-                        //Normal
-                        r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
-                        r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
-                        r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
-                        r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
-                        po.TURN_VAL = 1;
-                        po.reversed = false;
+                    if (po.ROHAN_MODE) {
+                        if (t.xToggle) {
+                            //Reverse
+                            r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
+                            po.TURN_VAL = -1;
+                            po.reversed = true;
+                        } else {
+                            //Normal
+                            r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
+                            r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
+                            r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
+                            po.TURN_VAL = 1;
+                            po.reversed = false;
+                        }
                     }
                 }
             }
