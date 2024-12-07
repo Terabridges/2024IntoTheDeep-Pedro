@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClassAuto;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyTeleOp;
 import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
@@ -29,26 +30,30 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Timer;
 
 import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPositionsNet;
 
-
 @Config
 @Autonomous(name="AutoNetZone", group="Auto")
 
 public class AutoNetZone extends OpMode
 {
-    ShoddyRobotClassAuto r;
-    ShoddyPositions po = new ShoddyPositions();
-    AutoPositionsNet n = new AutoPositionsNet();
+    public ShoddyRobotClassAuto r;
+    public ShoddyPositions po;
+    public AutoPositionsNet n;
+
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     public boolean holdPos = true;
 
+    public int xOffset;
+    public int yOffset;
+    public int hOffset;
 
     //Other Shit
 
-    double leftLinearTarget = po.LEFT_SLIDE_IN;
-    double rightLinearTarget = po.RIGHT_SLIDE_IN;
-    double clawTarget = po.CLAW_CLOSED;
-    double wristTarget = po.WRIST_PAR;
+    double leftLinearTarget;
+    double rightLinearTarget;
+    double clawTarget;
+    double wristTarget;
+
     double botVerticalPower = 0;
     double topVerticalPower = 0;
     double intakePower = 0;
@@ -337,20 +342,24 @@ public class AutoNetZone extends OpMode
         autonomousPathUpdate();
 
         //Set powers
-        setV4BPIDF(V4BTarget);
-        setSwivelPIDF(swivelTarget);
-        setVerticalSlidesPIDF(vertSlidesTarget);
-        r.rightLinear.setPosition(rightLinearTarget);
-        r.leftLinear.setPosition(leftLinearTarget);
-        r.claw.setPosition(clawTarget);
-        r.wrist.setPosition(wristTarget);
-        r.intake.setPower(intakePower);
+//        setV4BPIDF(V4BTarget);
+//        setSwivelPIDF(swivelTarget);
+//        setVerticalSlidesPIDF(vertSlidesTarget);
+//        r.rightLinear.setPosition(rightLinearTarget);
+//        r.leftLinear.setPosition(leftLinearTarget);
+//        r.claw.setPosition(clawTarget);
+//        r.wrist.setPosition(wristTarget);
+//        r.intake.setPower(intakePower);
 
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("intake state", intakeState);
+        telemetry.addData("transfer state", transferState);
+        telemetry.addData("outtake1 state", outtakeState);
+        telemetry.addData("outtake2 state", outtakeState2);
 
         //TelemetryPacket packet = new TelemetryPacket();
         //packet.fieldOverlay().setStroke("#3F51B5");
@@ -363,6 +372,8 @@ public class AutoNetZone extends OpMode
     @Override
     public void init() {
         r = new ShoddyRobotClassAuto(this);
+        n = new AutoPositionsNet();
+        po = new ShoddyPositions();
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
@@ -392,15 +403,14 @@ public class AutoNetZone extends OpMode
         vertSlidesTarget = po.VERTICAL_REST;
         swivelTarget = po.SWIVEL_DOWN;
 
-        double leftLinearTarget = po.LEFT_SLIDE_IN;
-        double rightLinearTarget = po.RIGHT_SLIDE_IN;
-        double clawTarget = po.CLAW_CLOSED;
-        double wristTarget = po.WRIST_PAR;
+        leftLinearTarget = po.LEFT_SLIDE_IN;
+        rightLinearTarget = po.RIGHT_SLIDE_IN;
+        clawTarget = po.CLAW_CLOSED;
+        wristTarget = po.WRIST_PAR;
 
         double botVerticalPower = 0;
         double topVerticalPower = 0;
         double intakePower = 0;
-
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
@@ -418,6 +428,11 @@ public class AutoNetZone extends OpMode
     /** We do not use this because everything should automatically disable **/
     @Override
     public void stop() {
+    }
+
+    public Pose poseOffset(Pose p)
+    {
+        return new Pose(p.getX()+xOffset,p.getY()+yOffset,p.getHeading()+hOffset);
     }
 
     public void GrabSample() {
