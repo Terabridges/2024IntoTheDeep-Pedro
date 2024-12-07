@@ -25,6 +25,7 @@ public class ShoddyPositions {
     public double speed;
     public double fastSpeed = 1;
     public double slowSpeed = 0.5;
+    public double samSlowSpeed = 0.65;
 
     //V4B
     public int V4B_TRANSFER_POS = 85;
@@ -35,14 +36,20 @@ public class ShoddyPositions {
     public int SWIVEL_DOWN = 165;
     public int SWIVEL_UP = 60;
     public int SWIVEL_LEVEL = 90;
+    public int SWIVEL_WALL = 100;
+    public int SWIVEL_BAR = 95;
 
     //Vertical Slides
     public int VERTICAL_UP = -3400;
     public int VERTICAL_DOWN = 0;
     public int VERTICAL_REST = -750;
+    public int VERTICAL_BAR_UP = -1820;
+    public int VERTICAL_BAR_DOWN = -1230;
 
     //Other
     public double MIN_TRIGGER_VAL = 0;
     public int TURN_VAL = 1;
+    public boolean ROHAN_MODE = false;
+    public boolean reversed = false;
 
 }

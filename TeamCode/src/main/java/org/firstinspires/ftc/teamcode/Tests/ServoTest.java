@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Shoddy.ShoddyPositions;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClass;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Utility.Toggles;
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.Utility.Toggles;
 public class ServoTest extends LinearOpMode {
 
     ShoddyRobotClass robot;
+    ShoddyPositions po;
 
     private ElapsedTime runtime = new ElapsedTime();
     public Gamepad currentGamepad1 = new Gamepad();
@@ -26,9 +28,12 @@ public class ServoTest extends LinearOpMode {
     public double leftTarget = positionLeft;
     public double rightTarget = positionRight;
 
+
+
     @Override
     public void runOpMode(){
         robot = new ShoddyRobotClass(this);
+        po = new ShoddyPositions();
 
         robot.servoSetUp();
         robot.analogSetUp();
@@ -43,12 +48,14 @@ public class ServoTest extends LinearOpMode {
 
 
             if (currentGamepad1.right_bumper && previousGamepad1.right_bumper) {
-                leftTarget = positionLeft;
-                rightTarget = positionRight;
+                robot.leftLinear.setPosition(po.LEFT_SLIDE_OUT);
+                robot.rightLinear.setPosition(po.RIGHT_SLIDE_OUT);
             }
 
-            robot.leftLinear.setPosition(leftTarget);
-            robot.rightLinear.setPosition(rightTarget);
+            if (currentGamepad1.left_bumper && previousGamepad1.left_bumper){
+                robot.leftLinear.setPosition(po.LEFT_SLIDE_IN);
+                robot.rightLinear.setPosition(po.RIGHT_SLIDE_IN);
+            }
 
             telemetry.addData("Left Slide Position", robot.leftLinear.getPosition());
             telemetry.addData("Left Slide Target", positionLeft);

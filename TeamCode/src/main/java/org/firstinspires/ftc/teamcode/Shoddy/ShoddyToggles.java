@@ -19,6 +19,7 @@ public class ShoddyToggles {
     public boolean dpUpToggle = false;
     public boolean dpDownToggle = false;
     public boolean lStickToggle = false;
+    public boolean rStickToggle = false;
 
 
     public ShoddyToggles(LinearOpMode opmode) {
@@ -85,6 +86,11 @@ public class ShoddyToggles {
         } else if (button.equals("dpad_down")) {
             if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down) {
                 dpDownToggle = !dpDownToggle;
+                return true;
+            }
+        } else if (button.equals("right_stick_button")) {
+            if (currentGamepad1.right_stick_button && !previousGamepad1.right_stick_button) {
+                rStickToggle = !rStickToggle;
                 return true;
             }
         }

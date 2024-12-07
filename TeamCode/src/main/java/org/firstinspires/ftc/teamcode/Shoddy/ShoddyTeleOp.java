@@ -83,12 +83,22 @@ public class ShoddyTeleOp extends LinearOpMode {
         TRANSFER_OUTTAKE
     };
 
+    public enum SpecimenState {
+        SPECIMEN_START,
+        SPECIMEN_WALL,
+        SPECIMEN_RISE,
+        SPECIMEN_FALL,
+        SPECIMEN_RESET
+    }
+
     public IntakeState intakeState = IntakeState.INTAKE_START;
     public ElapsedTime intakeTimer = new ElapsedTime();
     public OuttakeState outtakeState = OuttakeState.OUTTAKE_START;
     public ElapsedTime outtakeTimer = new ElapsedTime();
     public TransferState transferState = TransferState.TRANSFER_START;
     public ElapsedTime transferTimer = new ElapsedTime();
+    public SpecimenState specimenState = SpecimenState.SPECIMEN_START;
+    public ElapsedTime specimenTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
@@ -123,6 +133,8 @@ public class ShoddyTeleOp extends LinearOpMode {
         double intakePower = 0;
 
         boolean triggerIntake = true;
+        boolean resetState = false;
+        boolean manualPower = true;
 
         po.speed = po.fastSpeed;
 
@@ -166,7 +178,9 @@ public class ShoddyTeleOp extends LinearOpMode {
                 rightBackPower *= po.speed;
 
                 // Send calculated power to wheels
-                r.driveRobot(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+                if (manualPower) {
+                    r.driveRobot(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+                }
             }
 
             // Intake Power Toggles (DPAD RIGHT and DPAD LEFT)
@@ -196,6 +210,17 @@ public class ShoddyTeleOp extends LinearOpMode {
                         clawTarget = po.CLAW_OPEN;
                     } else {
                         clawTarget = po.CLAW_CLOSED;
+                    }
+                }
+            }
+
+            //Sam vs Rohan mode (Right Stick Button)
+            {
+                if (t.toggle("right_stick_button")){
+                    if (t.rStickToggle){
+                        po.ROHAN_MODE = true;
+                    } else {
+                        po.ROHAN_MODE = false;
                     }
                 }
             }
@@ -254,11 +279,14 @@ public class ShoddyTeleOp extends LinearOpMode {
                             leftLinearTarget = po.LEFT_SLIDE_IN;
                             rightLinearTarget = po.RIGHT_SLIDE_IN;
                             intakeTimer.reset();
-                            r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
-                            r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
-                            r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
-                            r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
-                            po.TURN_VAL = -1;
+                            if (po.ROHAN_MODE) {
+                                r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
+                                r.RB.setDirection(DcMotorSimple.Direction.REVERSE);
+                                r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
+                                r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
+                                po.TURN_VAL = -1;
+                                po.reversed = true;
+                            }
                             intakeState = IntakeState.INTAKE_RETRACT;
                         }
                         break;
@@ -270,10 +298,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                     default:
                         intakeState = IntakeState.INTAKE_START;
 
-                }
-
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (intakeState != IntakeState.INTAKE_START)){
-                    intakeState = IntakeState.INTAKE_START;
                 }
             }
 
@@ -297,21 +321,36 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case OUTTAKE_SWIVEL:
                         if (t.currentGamepad1.y && !t.previousGamepad1.y) {
                             clawTarget = po.CLAW_OPEN;
+                            if (po.ROHAN_MODE) {
+                                r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
+                                r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
+                                r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
+                                r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
+                                po.TURN_VAL = 1;
+                                po.reversed = false;
+                            }
+
+                            manualPower = false;
+                            r.LB.setPower(0.5);
+                            r.LF.setPower(0.5);
+                            r.RB.setPower(0.5);
+                            r.RF.setPower(0.5);
+
                             outtakeTimer.reset();
                             outtakeState = OuttakeState.OUTTAKE_DROP;
                         }
                         break;
                     case OUTTAKE_DROP:
-                        if ((t.currentGamepad1.y && !t.previousGamepad1.y) && (outtakeTimer.milliseconds() >= 1000)) {
+                        if (outtakeTimer.milliseconds() >= 500) {
+                            manualPower = true;
+                            r.LB.setPower(0);
+                            r.LF.setPower(0);
+                            r.RB.setPower(0);
+                            r.RF.setPower(0);
                             clawTarget = po.CLAW_CLOSED;
                             wristTarget = po.WRIST_PAR;
                             swivelTarget = po.SWIVEL_DOWN;
                             vertSlidesTarget = po.VERTICAL_REST;
-                            r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
-                            r.RB.setDirection(DcMotorSimple.Direction.FORWARD);
-                            r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
-                            r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
-                            po.TURN_VAL = 1;
                             outtakeState = OuttakeState.OUTTAKE_RETRACT;
                         }
                         break;
@@ -323,10 +362,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                         break;
                     default:
                         outtakeState = OuttakeState.OUTTAKE_START;
-                }
-
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (outtakeState != OuttakeState.OUTTAKE_START)){
-                    outtakeState = OuttakeState.OUTTAKE_START;
                 }
             }
 
@@ -364,10 +399,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                     default:
                         transferState = TransferState.TRANSFER_START;
                 }
-
-                if ((t.currentGamepad1.right_stick_button && !t.previousGamepad1.right_stick_button) && (transferState != TransferState.TRANSFER_START)){
-                    transferState = TransferState.TRANSFER_START;
-                }
             }
 
             //Swap Direction (X)
@@ -380,6 +411,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         r.LF.setDirection(DcMotorSimple.Direction.FORWARD);
                         r.RF.setDirection(DcMotorSimple.Direction.REVERSE);
                         po.TURN_VAL = -1;
+                        po.reversed = true;
                     } else {
                         //Normal
                         r.LB.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -387,6 +419,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         r.LF.setDirection(DcMotorSimple.Direction.REVERSE);
                         r.RF.setDirection(DcMotorSimple.Direction.FORWARD);
                         po.TURN_VAL = 1;
+                        po.reversed = false;
                     }
                 }
             }
@@ -395,10 +428,18 @@ public class ShoddyTeleOp extends LinearOpMode {
             // Slow Mode Toggle (Left Bumper)
             {
                 if (t.toggle("left_bumper")) {
-                    if (t.lBumpToggle) {
-                        po.speed = po.slowSpeed;
+                    if (po.ROHAN_MODE) {
+                        if (t.lBumpToggle) {
+                            po.speed = po.slowSpeed;
+                        } else {
+                            po.speed = po.fastSpeed;
+                        }
                     } else {
-                        po.speed = po.fastSpeed;
+                        if (t.lBumpToggle) {
+                            po.speed = po.samSlowSpeed;
+                        } else {
+                            po.speed = po.fastSpeed;
+                        }
                     }
                 }
             }
@@ -415,27 +456,63 @@ public class ShoddyTeleOp extends LinearOpMode {
             }
 
 
-            //Set Swivel level toggle for specimen bar (dpad up)
+            //Nothing currently (dpad up)
             {
-                if (t.toggle("dpad_up")) {
-                    if (t.dpUpToggle) {
-                        swivelTarget = po.SWIVEL_LEVEL;
-                        wristTarget = po.WRIST_PERP;
-                    } else {
-                        swivelTarget = po.SWIVEL_DOWN;
-                        wristTarget = po.WRIST_PAR;
-                    }
-                }
+
             }
 
             //Set Swivel for wall grab
-            if (t.toggle("dpad_down")) {
-                if (t.dpDownToggle) {
-                    swivelTarget = po.SWIVEL_LEVEL;
-                    wristTarget = po.WRIST_PERP;
-                } else {
-                    swivelTarget = po.SWIVEL_DOWN;
-                    wristTarget = po.WRIST_PAR;
+            {
+                switch (specimenState){
+                    case SPECIMEN_START:
+                        if ((resetState) || (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down)){
+                            usePIDFvertical = true;
+                            resetState = false;
+                            clawTarget = po.CLAW_OPEN;
+                            wristTarget = po.WRIST_PERP;
+                            swivelTarget = po.SWIVEL_WALL;
+                            vertSlidesTarget = po.VERTICAL_DOWN;
+                            specimenTimer.reset();
+                            specimenState = SpecimenState.SPECIMEN_WALL;
+                        }
+                        break;
+                    case SPECIMEN_WALL:
+                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down && specimenTimer.milliseconds() >= 300){
+                            clawTarget = po.CLAW_CLOSED;
+                            specimenTimer.reset();
+                            specimenState = SpecimenState.SPECIMEN_RISE;
+                        }
+                        break;
+                    case SPECIMEN_RISE:
+                        if (t.currentGamepad1.dpad_up && !t.previousGamepad1.dpad_up){
+                            resetState = true;
+                            specimenState = SpecimenState.SPECIMEN_START;
+                        } else if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down && specimenTimer.milliseconds() >= 300){
+                            vertSlidesTarget = po.VERTICAL_BAR_UP;
+                            swivelTarget = po.SWIVEL_BAR;
+                            specimenState = SpecimenState.SPECIMEN_FALL;
+                        }
+                        break;
+                    case SPECIMEN_FALL:
+                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down){
+                            vertSlidesTarget = po.VERTICAL_BAR_DOWN;
+                            specimenState = SpecimenState.SPECIMEN_RESET;
+                        }
+                        break;
+                    case SPECIMEN_RESET:
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_BAR_DOWN) < 50){
+                            clawTarget = po.CLAW_OPEN;
+                            wristTarget = po.WRIST_PAR;
+                            swivelTarget = po.SWIVEL_DOWN;
+                            vertSlidesTarget = po.VERTICAL_BAR_DOWN;
+                            specimenState = SpecimenState.SPECIMEN_START;
+
+                        } else if (t.currentGamepad1.dpad_up && !t.previousGamepad1.dpad_up){
+                            specimenState = SpecimenState.SPECIMEN_RISE;
+                        }
+                        break;
+                    default:
+                        specimenState = SpecimenState.SPECIMEN_START;
                 }
             }
 
@@ -459,8 +536,18 @@ public class ShoddyTeleOp extends LinearOpMode {
 
 
             //Telemetry
-            telemetry.addData("Left Trigger", t.currentGamepad1.left_trigger);
-            telemetry.addData("Right Trigger", t.currentGamepad1.right_trigger);
+            telemetry.addData("Reversed: ", po.reversed);
+            telemetry.addData("Current Speed: ", po.speed);
+
+            if (po.ROHAN_MODE){
+                telemetry.addData("Driver: ", "Saucy Indian Boy");
+            } else {
+                telemetry.addData("Driver: ", "My Asian Superstar <3");
+            }
+            if (runtime.seconds() == 10){
+                gamepad1.rumble(500);
+            }
+
             telemetry.update();
 
         }
