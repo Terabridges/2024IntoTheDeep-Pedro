@@ -15,35 +15,47 @@ import java.util.List;
 @Config
 public class Robot {
 
-    //Variables
+    //Objects
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
-
-    public Gamepad gp1, gp2;
-
-    public IntakeArm intakeArm;
+    public Gamepad gp1;
     public static VoltageSensor voltageSensor;
-    public OuttakeArm outtakeArm;
+
+    //Subsystems
+    public IntakeSystem intakeSystem;
+    public OuttakeSystem outtakeSystem;
+    public TransferSystem transferSystem;
     public Drivebase drivebase;
 
+    //Subsystem List
     public List<Subsystem> subsystems;
 
     //Constructors
-    public Robot(HardwareMap map, Telemetry t, Gamepad gp1, Gamepad gp2){
+    public Robot(HardwareMap map, Telemetry t, Gamepad gp1, Pose start, boolean resetSlidesEncoder){
         hardwareMap = map;
         telemetry = t;
-        voltageSensor = hardwareMap.voltageSensor.iterator().next();
+
         drivebase = new Drivebase(hardwareMap);
-        outtakeArm = new OuttakeArm(hardwareMap);
-        intakeArm = new IntakeArm(hardwareMap);
-        subsystems = new ArrayList<>(Arrays.asList( outtakeArm, intakeArm, drivebase));
+
+        outtakeSystem = new OuttakeSystem(hardwareMap);
+        intakeSystem = new IntakeSystem(hardwareMap);
+        transferSystem = new TransferSystem(hardwareMap);
+
+        subsystems = new ArrayList<>(Arrays.asList(outtakeSystem, intakeSystem, transferSystem, drivebase));
+
         this.gp1 = gp1;
-        this.gp2 = gp2;
+
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
     }
 
 
     //Methods
+    public double getVoltage() {
+        return voltageSensor.getVoltage();
+    }
+
+
+    //Interface Methods
     public void update() {
         for (Subsystem s : subsystems) {
             s.update();
@@ -56,4 +68,5 @@ public class Robot {
             s.toInit();
         }
     }
+
 }

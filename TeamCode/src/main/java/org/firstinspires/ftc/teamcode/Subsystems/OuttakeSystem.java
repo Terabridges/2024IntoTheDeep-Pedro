@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-public class OuttakeArm implements Subsystem {
+public class OuttakeSystem implements Subsystem {
 
     //Hardware
     public DcMotor topVertical;
@@ -18,7 +18,7 @@ public class OuttakeArm implements Subsystem {
     //Software
 
     //Constructor
-    public OuttakeArm(HardwareMap map) {
+    public OuttakeSystem(HardwareMap map) {
         topVertical = map.get(DcMotor.class, "top_vertical");
         bottomVertical = map.get(DcMotor.class, "bottom_vertical");
         leftSwivel = map.get(CRServo.class, "leftSwivel");

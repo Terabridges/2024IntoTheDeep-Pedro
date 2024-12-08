@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-public class IntakeArm implements Subsystem {
+public class IntakeSystem implements Subsystem {
 
     //Hardware
     public static Servo leftLinear;
@@ -27,8 +27,7 @@ public class IntakeArm implements Subsystem {
     public static double INTAKE_PULL_OUT = 0.4;
 
     //Constructor
-    public IntakeArm(HardwareMap map) {
-        //TODO Reverse directions if applicable
+    public IntakeSystem(HardwareMap map) {
         leftLinear = map.get(Servo.class, "left_linear");
         rightLinear = map.get(Servo.class, "right_linear");
         leftArm = map.get(CRServo.class, "leftArm");
