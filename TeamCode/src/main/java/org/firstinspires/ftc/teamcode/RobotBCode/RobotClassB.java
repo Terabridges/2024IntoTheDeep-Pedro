@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.;
 
 
 public class RobotClassB {
@@ -70,10 +71,10 @@ public class RobotClassB {
 
     public void wheelSetUpB(){
 
-        leftFrontDrive  = myOpMode.hardwareMap.get(DcMotor.class, "leftfront_drive");
-        leftBackDrive  = myOpMode.hardwareMap.get(DcMotor.class, "leftback_drive");
-        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "rightfront_drive");
-        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "rightback_drive");
+        leftFrontDrive  = myOpMode.hardwareMap.get(DcMotor.class, "left_front");
+        leftBackDrive  = myOpMode.hardwareMap.get(DcMotor.class, "left_back");
+        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front");
+        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back");
 
         leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
