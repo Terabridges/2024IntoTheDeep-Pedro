@@ -100,6 +100,9 @@ public class ShoddyRobotClass {
         rightSwivelAnalog = myOpMode.hardwareMap.analogInput.get("right_swivel_analog");
         rightV4BEnc = new AbsoluteAnalogEncoder(leftArmAnalog, 3.3, -150);
         leftV4BEnc = new AbsoluteAnalogEncoder(rightArmAnalog, 3.3, -190);
+
+        leftV4BEnc.setInverted(true);
+
         rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, 21);
     }
 

@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Shoddy.ShoddyAnalog;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyPositions;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClass;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClassAuto;
@@ -261,12 +262,14 @@ public class AutoNetZone extends OpMode
             case TO_SCORE_p:
                 outtakeState = OuttakeState.OUTTAKE_START;
 
+                pathTimer.resetTimer();
+
                 follower.followPath(n.scorePreload, holdPos);
 
                 pathState = PathState.SCORE_FORWARD;
                 break;
             case SCORE_FORWARD:
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE))
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE) && (pathTimer.getElapsedTime() >= 500))
                 {
                     follower.followPath(n.scoreForward);
 
@@ -393,6 +396,8 @@ public class AutoNetZone extends OpMode
             case RAISE_SLIDES:
                 if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
                 {
+                    pathTimer.resetTimer();
+
                     outtakeState = OuttakeState.OUTTAKE_START;
 
                     pathState = PathState.SCORE_FORWARD;
