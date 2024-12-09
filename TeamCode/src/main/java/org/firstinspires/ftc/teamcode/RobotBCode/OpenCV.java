@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.RobotBCode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -25,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-//@TeleOp(name = "OpenCV Testing"); // Why does this give an error?
+@TeleOp(name = "OpenCV Testing")
 public class OpenCV extends LinearOpMode {
 
     // initializes the width of the camera as well as its x and y direction
