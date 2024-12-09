@@ -101,8 +101,13 @@ public class AutoNetZone extends OpMode
     int dropTime = 1000;
     int grabTime = 1800;
 
+    int currentSample = 0;
+
     public PathState pathState;
     public enum PathState {
+        //Shared
+
+
         //Preload
         ToPRELOAD,
         RaiseSLIDESp,
@@ -114,6 +119,7 @@ public class AutoNetZone extends OpMode
         //Sample 1
         ToPICKUP1,
         PICKUP1,
+        TRANSFER1,
         ToSCORE1a,
         RaiseSLIDES1,
         ToSCORE1b,
@@ -121,29 +127,35 @@ public class AutoNetZone extends OpMode
         ToSCORE1c,
         RETRACT1,
 
-        //Sample 1
+        //Sample 2
         ToPICKUP2,
         PICKUP2,
         ToSCORE2a,
-        RaiseSLIDES2,
-        ToSCORE2b,
-        OpenCLAW2,
-        ToSCORE2c,
-        RETRACT2,
 
-        //Sample 1
+        //Sample 3
         ToPICKUP3,
         PICKUP3,
         ToSCORE3a,
-        RaiseSLIDES3,
-        ToSCORE3b,
-        OpenCLAW3,
-        ToSCORE3c,
-        RETRACT3,
 
-        TRANSFER,
+        PICKUP,
+        RAISE_SLIDES,
+        SCORE_FORWARD,
+        OPEN_CLAW,
+        SCORE_RETREAT,
+        SWITCH,
 
-        PARK
+        TO_PICKUP_1,
+        TO_PICKUP_2,
+        TO_PICKUP_3,
+        TO_SCORE_p,
+        TO_SCORE_1,
+        TO_SCORE_2,
+        TO_SCORE_3,
+
+
+        //Other
+        PARK,
+        END
     }
     public enum IntakeState {
         INTAKE_START,
@@ -189,28 +201,28 @@ public class AutoNetZone extends OpMode
     {
 
         n.scorePreload = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.startPose), new Point(n.scorePosePT1p)))
-                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.scorePosePT1p.getHeading())
+                .addPath(new BezierLine(new Point(n.startPose), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.startPose.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePosePT1p), new Point(n.pickup1Pose)))
-                .setLinearHeadingInterpolation(n.scorePosePT1p.getHeading(), n.pickup1Pose.getHeading())
+                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup1Pose)))
+                .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup1Pose.getHeading())
                 .build();
 
         n.scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup1Pose), new Point(n.scorePosePT1)))
-                .setLinearHeadingInterpolation(n.pickup1Pose.getHeading(), n.scorePosePT1.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup1Poseb), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup1Poseb.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup2Pose)))
+                .addPath(new BezierCurve(new Point(n.scorePosePT1), new Point(n.pickup2Control), new Point(n.pickup2Pose)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup2Pose.getHeading())
                 .build();
 
         n.scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup2Pose), new Point(n.scorePosePT1)))
-                .setLinearHeadingInterpolation(n.pickup2Pose.getHeading(), n.scorePosePT1.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup2Poseb), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup2Poseb.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.grabPickup3 = follower.pathBuilder()
@@ -219,8 +231,8 @@ public class AutoNetZone extends OpMode
                 .build();
 
         n.scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.pickup3Pose), new Point(n.scorePosePT1)))
-                .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.scorePosePT1.getHeading())
+                .addPath(new BezierLine(new Point(n.pickup3Poseb), new Point(n.scorePosePT1)))
+                .setLinearHeadingInterpolation(n.pickup3Poseb.getHeading(), n.scorePosePT1.getHeading())
                 .build();
 
         n.scoreForward = follower.pathBuilder()
@@ -237,15 +249,6 @@ public class AutoNetZone extends OpMode
                 .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.parkPose)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.parkPose.getHeading())
                 .build();
-        n.scoreForwardp = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePosePT1p), new Point(n.scorePosePT2p)))
-                .setLinearHeadingInterpolation(n.scorePosePT1p.getHeading(), n.scorePosePT2p.getHeading())
-                .build();
-
-        n.scoreRetreatp = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(n.scorePosePT2p), new Point(n.scorePosePT1p)))
-                .setLinearHeadingInterpolation(n.scorePosePT2p.getHeading(), n.scorePosePT1p.getHeading())
-                .build();
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -255,141 +258,162 @@ public class AutoNetZone extends OpMode
     {
         switch (pathState)
         {
+            case TO_SCORE_p:
+                outtakeState = OuttakeState.OUTTAKE_START;
 
-            //PRELOAD CHAIN
+                follower.followPath(n.scorePreload, holdPos);
 
-            case ToPRELOAD:
-                if (transferState == TransferState.TRANSFER_IDLE)
-                {
-                    follower.followPath(n.scorePreload, holdPos);
-
-                    pathState = PathState.RaiseSLIDESp;
-                }
+                pathState = PathState.SCORE_FORWARD;
                 break;
-            case RaiseSLIDESp:
-                if(follower.getPose().getX() > (n.scorePosePT1p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1p.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
-                {
-                    outtakeState = OuttakeState.OUTTAKE_START;
-
-                    pathState = PathState.FORWARDp;
-                }
-                break;
-            case FORWARDp:
-                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
-                {
-                    follower.followPath(n.scoreForwardp);
-
-                    pathState = PathState.OpenCLAWp;
-                }
-                break;
-            case OpenCLAWp:
-                if(follower.getPose().getX() > (n.scorePosePT2p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2p.getY() - 1))
-                {
-                    pathTimer.resetTimer();
-                    clawTarget = po.CLAW_OPEN;
-
-                    pathState = PathState.RETREATp;
-                }
-                break;
-            case RETREATp:
-                if (pathTimer.getElapsedTime() >= 400)
-                {
-                    follower.followPath(n.scoreRetreatp);
-
-                    pathState = PathState.RETRACTp;
-                }
-                break;
-            case RETRACTp:
-                if(follower.getPose().getX() > (n.scorePosePT1p.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1p.getY() - 1))
-                {
-                    pathTimer.resetTimer();
-                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
-
-                    pathState = PathState.ToPICKUP1;
-                }
-                break;
-
-            //SAMPLE 1 CHAIN
-
-            case ToPICKUP1:
-                if(pathTimer.getElapsedTime() >= 1500)
-                {
-                    follower.followPath(n.grabPickup1, holdPos);
-
-                    pathState = PathState.PICKUP1;
-                }
-
-                break;
-            case PICKUP1:
-                if(follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1))
-                {
-                    intakeState = IntakeState.INTAKE_START;
-
-                    pathState = PathState.TRANSFER;
-                }
-                break;
-            case TRANSFER:
-                if (intakeState == IntakeState.INTAKE_IDLE) {
-                    transferState = TransferState.TRANSFER_START;
-                    pathState = PathState.ToSCORE1a;
-                }
-                break;
-            case ToSCORE1a:
-                if (transferState == TransferState.TRANSFER_IDLE)
-                {
-                    follower.followPath(n.scorePickup1, holdPos);
-
-                    pathState = PathState.RaiseSLIDES1;
-                }
-                break;
-            case RaiseSLIDES1:
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
-                {
-                    outtakeState = OuttakeState.OUTTAKE_START;
-
-                    pathState = PathState.ToSCORE1b;
-                }
-                break;
-            case ToSCORE1b:
-                if (outtakeState == OuttakeState.OUTTAKE_IDLE)
+            case SCORE_FORWARD:
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE))
                 {
                     follower.followPath(n.scoreForward);
 
-                    pathState = PathState.OpenCLAW1;
+                    pathState = PathState.OPEN_CLAW;
                 }
                 break;
-            case OpenCLAW1:
+            case OPEN_CLAW:
                 if(follower.getPose().getX() > (n.scorePosePT2.getX() - 1) && follower.getPose().getY() > (n.scorePosePT2.getY() - 1))
                 {
                     pathTimer.resetTimer();
                     clawTarget = po.CLAW_OPEN;
 
-                    pathState = PathState.ToSCORE1c;
+                    pathState = PathState.SCORE_RETREAT;
                 }
                 break;
-            case ToSCORE1c:
-                if (pathTimer.getElapsedTime() >= 400)
+            case SCORE_RETREAT:
+                if (pathTimer.getElapsedTime() >= 600)
                 {
                     follower.followPath(n.scoreRetreat);
 
-                    pathState = PathState.RETRACT1;
+                    pathState = PathState.SWITCH;
                 }
                 break;
-            case RETRACT1:
+            case SWITCH:
                 if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1))
                 {
-                    pathTimer.resetTimer();
-                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
-
-                    pathState = PathState.PARK;
+                    if(currentSample==0)
+                    {
+                        currentSample = 1;
+                        pathState = PathState.TO_PICKUP_1;
+                    }
+                    else if(currentSample==1)
+                    {
+                        currentSample = 2;
+                        pathState = PathState.TO_PICKUP_2;
+                    }
+                    else if(currentSample==2)
+                    {
+                        currentSample = 3;
+                        pathState = PathState.TO_PICKUP_3;
+                    }
+                    else if (currentSample==3)
+                    {
+                        currentSample = 0;
+                        pathState = PathState.PARK;
+                    }
                 }
                 break;
-//            case PARK:
-//                if(pathTimer.getElapsedTime() >= 2000)
-//                {
-//                    follower.followPath(n.park);
-//                }
-//                break;
+            case TO_PICKUP_1:
+                    outtakeState2 = OuttakeState2.OUTTAKE2_START;
+
+                    follower.followPath(n.grabPickup1, holdPos);
+
+                    pathState = PathState.PICKUP;
+                break;
+            case TO_PICKUP_2:
+                outtakeState2 = OuttakeState2.OUTTAKE2_START;
+
+                follower.followPath(n.grabPickup2, holdPos);
+
+                pathState = PathState.PICKUP;
+                break;
+            case TO_PICKUP_3:
+                outtakeState2 = OuttakeState2.OUTTAKE2_START;
+
+                follower.followPath(n.grabPickup3, holdPos);
+
+                pathState = PathState.PICKUP;
+                break;
+            case PICKUP:
+                if(currentSample == 1)
+                {
+                    if((follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1)) && outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
+                    {
+                        intakeState = IntakeState.INTAKE_START;
+
+                        pathState = PathState.TO_SCORE_1;
+                    }
+                }
+                else if(currentSample == 2)
+                {
+                    if((follower.getPose().getX() > (n.pickup2Pose.getX() - 1) && follower.getPose().getY() > (n.pickup2Pose.getY() - 1)) && outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
+                    {
+                        intakeState = IntakeState.INTAKE_START;
+
+                        pathState = PathState.TO_SCORE_2;
+                    }
+                }
+                else if(currentSample == 3)
+                {
+                    if((follower.getPose().getX() > (n.pickup3Pose.getX() - 1) && follower.getPose().getY() > (n.pickup3Pose.getY() - 1)) && outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
+                    {
+                        intakeState = IntakeState.INTAKE_START;
+
+                        pathState = PathState.TO_SCORE_3;
+                    }
+                }
+                break;
+            case TO_SCORE_1:
+                if (intakeState == IntakeState.INTAKE_IDLE)
+                {
+                    follower.followPath(n.scorePickup1, holdPos);
+                    transferState = TransferState.TRANSFER_START;
+
+                    pathState = PathState.RAISE_SLIDES;
+                }
+            case TO_SCORE_2:
+                if (intakeState == IntakeState.INTAKE_IDLE)
+                {
+                    follower.followPath(n.scorePickup2, holdPos);
+                    transferState = TransferState.TRANSFER_START;
+
+                    pathState = PathState.RAISE_SLIDES;
+                }
+            case TO_SCORE_3:
+                if (intakeState == IntakeState.INTAKE_IDLE)
+                {
+                    follower.followPath(n.scorePickup3, holdPos);
+                    transferState = TransferState.TRANSFER_START;
+
+                    pathState = PathState.RAISE_SLIDES;
+                }
+                break;
+            case RAISE_SLIDES:
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (transferState == TransferState.TRANSFER_IDLE))
+                {
+                    outtakeState = OuttakeState.OUTTAKE_START;
+
+                    pathState = PathState.SCORE_FORWARD;
+                }
+                break;
+                //Park and End
+            case PARK:
+                if(pathTimer.getElapsedTime() >= 2000)
+                {
+                    follower.followPath(n.park);
+
+                    pathState = PathState.END;
+                }
+                break;
+            case END:
+                if(follower.getPose().getX() > (n.parkPose.getX() - 1) && follower.getPose().getY() > (n.parkPose.getY() - 1))
+                {
+                    //Set motors for teleop
+                }
+
+
         }
     }
 
@@ -427,10 +451,11 @@ public class AutoNetZone extends OpMode
 //        telemetry.addData("x", follower.getPose().getX());
 //        telemetry.addData("y", follower.getPose().getY());
 //        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
-//        telemetry.addData("intake state", intakeState);
+        telemetry.addData("path state", pathState);
+        telemetry.addData("intake state", intakeState);
         telemetry.addData("transfer state", transferState);
-//        telemetry.addData("outtake1 state", outtakeState);
-//        telemetry.addData("outtake2 state", outtakeState2);
+        telemetry.addData("outtake1 state", outtakeState);
+        telemetry.addData("outtake2 state", outtakeState2);
 
         //TelemetryPacket packet = new TelemetryPacket();
         //packet.fieldOverlay().setStroke("#3F51B5");
@@ -506,7 +531,7 @@ public class AutoNetZone extends OpMode
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        pathState = PathState.ToPRELOAD;
+        pathState = PathState.TO_SCORE_p;
     }
 
     /** We do not use this because everything should automatically disable **/
