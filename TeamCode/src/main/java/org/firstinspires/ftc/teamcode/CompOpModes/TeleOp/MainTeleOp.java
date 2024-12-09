@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Utility.Toggles;
 import org.firstinspires.ftc.teamcode.Utility.Positions;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 
 import java.util.HashMap;
 
@@ -19,25 +20,27 @@ public class MainTeleOp extends LinearOpMode {
 
     public HashMap<String, String> gamepadMap = null;
     private ElapsedTime runtime = new ElapsedTime();
+    public Pose startPose;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        Robot robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
-        Toggles toggles = new Toggles(this);
-        Positions positions = new Positions();
+        Robot r = new Robot(hardwareMap, telemetry, gamepad1, startPose, false);
+        Toggles t = new Toggles(this);
+        Positions po = new Positions();
 
 
-        robot.toInit();
+        r.toInit();
+
         waitForStart();
         runtime.reset();
 
 
         while (opModeIsActive()) {
-            toggles.copyGamepad();
+            t.copyGamepad();
 
-            robot.update();
+            r.update();
             telemetry.update();
         }
     }

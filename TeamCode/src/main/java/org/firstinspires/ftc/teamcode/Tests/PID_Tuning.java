@@ -51,6 +51,12 @@ public class PID_Tuning extends LinearOpMode {
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
+    public static boolean leftArmEnabled = true;
+    public static boolean rightArmEnabled = true;
+    public static double leftPower = 0;
+    public static double rightPower = 0;
+
+
     @Override
     public void runOpMode() {
 
@@ -73,26 +79,32 @@ public class PID_Tuning extends LinearOpMode {
 
         while (opModeIsActive()){
 
-            //setV4BPIDF(V4BTarget);
-            setVerticalSlidesPIDF(vertSlidesTarget);
-            setSwivelPIDF(swivelTarget);
+            //r.leftArm.setPower(leftPower);
+            //r.rightArm.setPower(rightPower);
 
-            telemetry.addData("Swivel Power", r.rightSwivel.getPower());
+
+            setV4BPIDF(V4BTarget);
+            //setVerticalSlidesPIDF(vertSlidesTarget);
+            //setSwivelPIDF(swivelTarget);
+
+            //telemetry.addData("Swivel Power", r.rightSwivel.getPower());
             telemetry.addData("V4B Power", r.rightArm.getPower());
-            telemetry.addData("Vertical Slides Power", r.bottomVertical.getPower());
+            //telemetry.addData("Vertical Slides Power", r.bottomVertical.getPower());
             telemetry.addData("V4B Pos", armPos);
             telemetry.addData("V4B Target", V4BTarget);
-            telemetry.addData("Vertical Slides Pos", armPos2);
-            telemetry.addData("Vertical Slides Target", vertSlidesTarget);
-            telemetry.addData("Swivel Pos", armPos3);
-            telemetry.addData("Swivel Target", swivelTarget);
+            //telemetry.addData("Vertical Slides Pos", armPos2);
+            //telemetry.addData("Vertical Slides Target", vertSlidesTarget);
+            //telemetry.addData("Swivel Pos", armPos3);
+            //telemetry.addData("Swivel Target", swivelTarget);
             telemetry.update();
         }
     }
 
     private void setV4BPIDF(int target) {
         controller.setPID(p, i, d);
-        armPos = r.rightV4BEnc.getCurrentPosition();
+        //armPos = r.rightV4BEnc.getCurrentPosition();
+        armPos = r.leftV4BEnc.getCurrentPosition();
+
         pid = controller.calculate(armPos, target);
         targetArmAngle = target;
         ff = (Math.sin(Math.toRadians(targetArmAngle))) * f;
@@ -100,8 +112,8 @@ public class PID_Tuning extends LinearOpMode {
 
         V4BPower = pid + ff;
 
-        r.leftArm.setPower(V4BPower);
-        r.rightArm.setPower(V4BPower);
+        r.leftArm.setPower((leftArmEnabled ?  V4BPower : 0));
+        r.rightArm.setPower((rightArmEnabled ?  V4BPower : 0));
     }
 
     private void setVerticalSlidesPIDF(int target2) {

@@ -10,9 +10,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
 
-
-//TODO slow mode (left bumper), assign x button and (dpad down probably should move vertical slides to specimen position), figure out wrist positions, figure out swivel level, maybe do field centric toggle?
-
 @Config
 @TeleOp(name="ShoddyTeleOp", group="TeleOp")
 public class ShoddyTeleOp extends LinearOpMode {
@@ -100,6 +97,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     public SpecimenState specimenState = SpecimenState.SPECIMEN_START;
     public ElapsedTime specimenTimer = new ElapsedTime();
 
+    /////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public void runOpMode() {
         r = new ShoddyRobotClass(this);
@@ -119,27 +117,51 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         //r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        V4BTarget = po.V4B_TRANSFER_POS;
-        vertSlidesTarget = po.VERTICAL_REST;
-        swivelTarget = po.SWIVEL_DOWN;
+        double leftLinearTarget;
+        double rightLinearTarget;
+        double clawTarget;
+        double wristTarget;
 
-        double leftLinearTarget = po.LEFT_SLIDE_IN;
-        double rightLinearTarget = po.RIGHT_SLIDE_IN;
-        double clawTarget = po.CLAW_CLOSED;
-        double wristTarget = po.WRIST_PAR;
-
-        double botVerticalPower = 0;
-        double topVerticalPower = 0;
-        double intakePower = 0;
+        double botVerticalPower;
+        double topVerticalPower;
+        double intakePower;
 
         boolean triggerIntake = true;
         boolean resetState = false;
         boolean manualPower = true;
 
+        boolean encodersReset = false;
+
         po.speed = po.fastSpeed;
 
+
+        ////////////////////////////////////////////////////////////////////////////////
+        while (!isStarted()) {
+            if (gamepad1.dpad_up) {
+                r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                r.bottomVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                encodersReset = true;
+            }
+            telemetry.addData("Encoders Reset? ", encodersReset);
+            telemetry.update();
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
         waitForStart();
         runtime.reset();
+
+        V4BTarget = po.V4B_TRANSFER_POS;
+        vertSlidesTarget = po.VERTICAL_REST;
+        swivelTarget = po.SWIVEL_DOWN;
+
+        leftLinearTarget = po.LEFT_SLIDE_IN;
+        rightLinearTarget = po.RIGHT_SLIDE_IN;
+        clawTarget = po.CLAW_CLOSED;
+        wristTarget = po.WRIST_PAR;
+
+        botVerticalPower = 0;
+        topVerticalPower = 0;
+        intakePower = 0;
 
         while (opModeIsActive()) {
 
@@ -552,6 +574,9 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // Methods
     public void setV4BPIDF(int target) {
         controller.setPID(p, i, d);
