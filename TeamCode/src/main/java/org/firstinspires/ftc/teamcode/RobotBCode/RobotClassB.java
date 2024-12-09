@@ -4,10 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
 
 public class RobotClassB {
     private LinearOpMode myOpMode = null;
+
+    //LED noodle
+    public DigitalChannel blueNoodle;
 
     //Wheel Motors
     public DcMotor leftFrontDrive;
@@ -108,6 +112,17 @@ public class RobotClassB {
         leftViper = myOpMode.hardwareMap.get(DcMotor.class, "leftViper");
         rightViper  = myOpMode.hardwareMap.get(DcMotor.class, "rightViper");
         armMotorB = myOpMode.hardwareMap.get(DcMotor.class, "armB");
+    }
+
+    public void LEDSetUpTest()
+    {
+        blueNoodle = myOpMode.hardwareMap.get(DigitalChannel.class, "blueNoodle");
+        blueNoodle.setMode(DigitalChannel.Mode.OUTPUT);
+    }
+
+    public void blueNoodleToggle()
+    {
+        blueNoodle.setState(!blueNoodle.getState());
     }
 
     public void driveRobot(double lf, double rf, double lb, double rb){
