@@ -112,7 +112,7 @@ public class PID_Tuning extends LinearOpMode {
 
         V4BPower = pid + ff;
 
-        r.leftArm.setPower((leftArmEnabled ?  V4BPower : 0));
+        //r.leftArm.setPower((leftArmEnabled ?  V4BPower : 0));
         r.rightArm.setPower((rightArmEnabled ?  V4BPower : 0));
     }
 
