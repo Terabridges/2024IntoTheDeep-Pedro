@@ -54,7 +54,7 @@ public class OpenCV extends LinearOpMode {
 
         while (opModeIsActive()) {
             telemetry.addData("Coordinates", "(" + (int)(cX) + "," + (int)(cY) + ")");
-            //telemetry.addData("Distance in Inches", getDistance(width));
+            telemetry.addData("Distance in Inches", getDistance(width));
         }
     }
     public void initOpenCV(){
