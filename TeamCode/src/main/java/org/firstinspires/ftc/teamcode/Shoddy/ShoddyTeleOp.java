@@ -28,7 +28,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     //First PID for V4B
     private PIDController controller;
-    public static double p = 0.006, i = 0.005, d = 0.00004;
+    public static double p = 0.005, i = 0.02, d = 0.00004;
     public static double f = 0.14;
     private final double ticks_in_degree = 144.0 / 180.0;
     public static int V4BTarget;
@@ -82,6 +82,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     public enum SpecimenState {
         SPECIMEN_START,
+        SPECIMEN_MOVE,
         SPECIMEN_WALL,
         SPECIMEN_RISE,
         SPECIMEN_FALL,
@@ -115,7 +116,8 @@ public class ShoddyTeleOp extends LinearOpMode {
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
 
-        //r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //TODO Turn off for competitions
+        r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         double leftLinearTarget;
         double rightLinearTarget;
@@ -132,19 +134,21 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         boolean encodersReset = false;
 
+        double distanceOutput = 0;
+
         po.speed = po.fastSpeed;
 
 
         ////////////////////////////////////////////////////////////////////////////////
-        while (!isStarted()) {
-            if (gamepad1.dpad_up) {
-                r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                r.bottomVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                encodersReset = true;
-            }
-            telemetry.addData("Encoders Reset? ", encodersReset);
-            telemetry.update();
-        }
+//        while (!isStarted()) {
+//            if (gamepad1.dpad_up) {
+//                r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                r.bottomVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                encodersReset = true;
+//            }
+//            telemetry.addData("Encoders Reset? ", encodersReset);
+//            telemetry.update();
+//        }
 
         ////////////////////////////////////////////////////////////////////////////////
         waitForStart();
@@ -168,6 +172,8 @@ public class ShoddyTeleOp extends LinearOpMode {
             t.copyGamepad();
 
             //INIT
+
+            distanceOutput = (r.distanceSensorRear.getVoltage()*48.7)-4.9;
 
             //Robot Drive (Left Stick and Right Stick X)
             {
@@ -487,9 +493,8 @@ public class ShoddyTeleOp extends LinearOpMode {
             {
                 switch (specimenState){
                     case SPECIMEN_START:
-                        if ((resetState) || (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down)){
+                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down){
                             usePIDFvertical = true;
-                            resetState = false;
                             clawTarget = po.CLAW_OPEN;
                             wristTarget = po.WRIST_PERP;
                             swivelTarget = po.SWIVEL_WALL;
@@ -506,19 +511,32 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case SPECIMEN_RISE:
-                        if (t.currentGamepad1.dpad_up && !t.previousGamepad1.dpad_up){
-                            resetState = true;
-                            specimenState = SpecimenState.SPECIMEN_START;
-                        } else if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down && specimenTimer.milliseconds() >= 300){
+                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down && specimenTimer.milliseconds() >= 300){
                             vertSlidesTarget = po.VERTICAL_BAR_UP;
                             swivelTarget = po.SWIVEL_BAR;
+                            specimenState = SpecimenState.SPECIMEN_MOVE;
+                        }
+                        break;
+                    case SPECIMEN_MOVE:
+                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down) {
+                            manualPower = false;
+                            r.LB.setPower(-0.3);
+                            r.LF.setPower(-0.3);
+                            r.RB.setPower(-0.3);
+                            r.RF.setPower(-0.3);
                             specimenState = SpecimenState.SPECIMEN_FALL;
                         }
                         break;
                     case SPECIMEN_FALL:
-                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down){
-                            vertSlidesTarget = po.VERTICAL_BAR_DOWN;
-                            specimenState = SpecimenState.SPECIMEN_RESET;
+                        if (distanceOutput <= po.specimenDistance){
+                            manualPower = true;
+                            r.LB.setPower(0);
+                            r.LF.setPower(0);
+                            r.RB.setPower(0);
+                            r.RF.setPower(0);
+                            //vertSlidesTarget = po.VERTICAL_BAR_DOWN;
+                            //specimenState = SpecimenState.SPECIMEN_RESET;
+                            specimenState = SpecimenState.SPECIMEN_START;
                         }
                         break;
                     case SPECIMEN_RESET:
@@ -528,9 +546,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                             swivelTarget = po.SWIVEL_DOWN;
                             vertSlidesTarget = po.VERTICAL_BAR_DOWN;
                             specimenState = SpecimenState.SPECIMEN_START;
-
-                        } else if (t.currentGamepad1.dpad_up && !t.previousGamepad1.dpad_up){
-                            specimenState = SpecimenState.SPECIMEN_RISE;
                         }
                         break;
                     default:
@@ -560,6 +575,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             //Telemetry
             telemetry.addData("Reversed: ", po.reversed);
             telemetry.addData("Current Speed: ", po.speed);
+            telemetry.addData("Distance: ", distanceOutput);
 
             if (po.ROHAN_MODE){
                 telemetry.addData("Driver: ", "Saucy Indian Boy");

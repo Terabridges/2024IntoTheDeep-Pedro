@@ -15,8 +15,8 @@ public class SwyftRangerTesting extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        ranger1 = hardwareMap.get(AnalogInput.class, "ranger1");
-        ranger0 = hardwareMap.get(AnalogInput.class, "ranger0");
+        ranger1 = hardwareMap.get(AnalogInput.class, "distance_sensor_rear_3");
+        ranger0 = hardwareMap.get(AnalogInput.class, "distance_sensor_rear_2");
 
 
         // get a reference to our Light Sensor object.

@@ -35,9 +35,8 @@ public class ShoddyPositions {
     //Swivel
     public int SWIVEL_DOWN = 165;
     public int SWIVEL_UP = 60;
-    public int SWIVEL_LEVEL = 90;
-    public int SWIVEL_WALL = 100;
-    public int SWIVEL_BAR = 95;
+    public int SWIVEL_WALL = 110;
+    public int SWIVEL_BAR = 80;
 
     //Vertical Slides
     public int VERTICAL_UP = -3400;
@@ -51,5 +50,6 @@ public class ShoddyPositions {
     public int TURN_VAL = 1;
     public boolean ROHAN_MODE = false;
     public boolean reversed = false;
+    public double specimenDistance = 6.15;
 
 }

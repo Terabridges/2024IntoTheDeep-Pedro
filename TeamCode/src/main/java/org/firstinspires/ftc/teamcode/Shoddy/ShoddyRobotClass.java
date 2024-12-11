@@ -9,10 +9,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 
 public class ShoddyRobotClass {
     private LinearOpMode myOpMode = null;
@@ -48,6 +44,8 @@ public class ShoddyRobotClass {
     public AbsoluteAnalogEncoder rightV4BEnc;
     public AbsoluteAnalogEncoder leftV4BEnc;
     public AbsoluteAnalogEncoder rightSwivelEnc;
+
+    public AnalogInput distanceSensorRear;
 
     //Other Variables
 
@@ -104,6 +102,8 @@ public class ShoddyRobotClass {
         leftV4BEnc.setInverted(true);
 
         rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, 21);
+
+        distanceSensorRear = myOpMode.hardwareMap.analogInput.get("distance_sensor_rear_2");
     }
 
     public void driveRobot(double lf, double rf, double lb, double rb){
