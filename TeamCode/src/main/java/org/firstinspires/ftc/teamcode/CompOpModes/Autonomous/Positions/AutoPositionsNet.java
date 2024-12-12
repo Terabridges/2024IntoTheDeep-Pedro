@@ -23,7 +23,7 @@ public class AutoPositionsNet
     /* Middle (Second) Sample from the Spike Mark */
     public Pose pickup2Pose = new Pose(44.9, 100, Math.toRadians(78));
     public Pose pickup2Control = new Pose(32, 118, Math.toRadians(78)); //Curve control pose
-    public Pose pickup2Poseb = new Pose(45.25, 103, Math.toRadians(78)); //After intake forward, estimated pose
+    public Pose pickup2Poseb = new Pose(44.9, 103, Math.toRadians(78)); //After intake forward, estimated pose
 
     /* Highest (Third) Sample from the Spike Mark */
     public Pose pickup3Pose = new Pose(45.25, 106.5, Math.toRadians(78));
