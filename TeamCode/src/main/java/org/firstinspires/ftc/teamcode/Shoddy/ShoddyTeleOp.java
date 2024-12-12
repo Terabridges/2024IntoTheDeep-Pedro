@@ -98,6 +98,12 @@ public class ShoddyTeleOp extends LinearOpMode {
     public SpecimenState specimenState = SpecimenState.SPECIMEN_START;
     public ElapsedTime specimenTimer = new ElapsedTime();
 
+    public double distanceOutput = 0;
+    public boolean useReduceSpeed = false;
+    public double defaultDistanceReduce = 10;
+    public double defaultDistanceStop = 5;
+
+
     /////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public void runOpMode() {
@@ -133,8 +139,6 @@ public class ShoddyTeleOp extends LinearOpMode {
         boolean manualPower = true;
 
         boolean encodersReset = false;
-
-        double distanceOutput = 0;
 
         po.speed = po.fastSpeed;
 
@@ -206,26 +210,27 @@ public class ShoddyTeleOp extends LinearOpMode {
                 rightBackPower *= po.speed;
 
                 // Send calculated power to wheels
-                if (manualPower) {
+                if (useReduceSpeed){
+                    r.driveRobot(reducePower(leftFrontPower), reducePower(rightFrontPower), reducePower(leftBackPower), reducePower(rightBackPower));
+
+                } else if (manualPower) {
                     r.driveRobot(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
                 }
             }
 
-            // Intake Power Toggles (DPAD RIGHT and DPAD LEFT)
+            // Use Reduce Speed Mode (dpad left)
             {
-                if (t.toggle("dpad_right")) {
-                    if (t.dpRightToggle) {
-                        intakePower = po.INTAKE_POWER_IN;
-                    } else {
-                        intakePower = 0;
-                    }
-                }
+//                if (t.toggle("dpad_right")) {
+//                    if (t.dpRightToggle) {
+//                        intakePower = po.INTAKE_POWER_IN;
+//                    } else {
+//                        intakePower = 0;
+//                    }
+//                }
 
                 if (t.toggle("dpad_left")) {
                     if (t.dpLeftToggle) {
-                        intakePower = po.INTAKE_POWER_OUT;
-                    } else {
-                        intakePower = 0;
+                        useReduceSpeed = !useReduceSpeed;
                     }
                 }
             }
@@ -576,6 +581,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             telemetry.addData("Reversed: ", po.reversed);
             telemetry.addData("Current Speed: ", po.speed);
             telemetry.addData("Distance: ", distanceOutput);
+            telemetry.addData("Reduce Speed Mode: ", useReduceSpeed);
 
             if (po.ROHAN_MODE){
                 telemetry.addData("Driver: ", "Saucy Indian Boy");
@@ -584,6 +590,10 @@ public class ShoddyTeleOp extends LinearOpMode {
             }
             if (runtime.seconds() == 10){
                 gamepad1.rumble(500);
+            }
+
+            if (useReduceSpeed){
+                telemetry.addData("If 100% Power: ", reducePower(1));
             }
 
             telemetry.update();
@@ -634,6 +644,26 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         r.leftSwivel.setPower(swivelPower);
         r.rightSwivel.setPower(swivelPower);
+    }
+
+    public double reducePower(double power, double distance, double distanceStartReducing, double distanceToStop){
+        double powerFactor;
+        double minPowerFactor = 0.05;
+        if ((distance <= distanceStartReducing) && (distance > distanceToStop)){
+            powerFactor = ((distance - distanceToStop) / (distanceStartReducing - distanceToStop))/2;
+        } else if (distance <= distanceToStop){
+            powerFactor = 0;
+        } else {
+            powerFactor = 1;
+        }
+        if (powerFactor < minPowerFactor){
+            powerFactor = 0.1;
+        }
+        return power*powerFactor;
+    }
+
+    public double reducePower(double power){
+        return this.reducePower(power, distanceOutput, defaultDistanceReduce, defaultDistanceStop);
     }
 }
 

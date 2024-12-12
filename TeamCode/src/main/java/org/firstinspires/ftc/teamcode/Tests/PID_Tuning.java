@@ -83,9 +83,9 @@ public class PID_Tuning extends LinearOpMode {
             //r.rightArm.setPower(rightPower);
 
 
-            setV4BPIDF(V4BTarget);
+            //setV4BPIDF(V4BTarget);
             //setVerticalSlidesPIDF(vertSlidesTarget);
-            //setSwivelPIDF(swivelTarget);
+            setSwivelPIDF(swivelTarget);
 
             //telemetry.addData("Swivel Power", r.rightSwivel.getPower());
             telemetry.addData("V4B Power", r.rightArm.getPower());
@@ -102,8 +102,8 @@ public class PID_Tuning extends LinearOpMode {
 
     private void setV4BPIDF(int target) {
         controller.setPID(p, i, d);
-        //armPos = r.rightV4BEnc.getCurrentPosition();
-        armPos = r.leftV4BEnc.getCurrentPosition();
+        armPos = r.rightV4BEnc.getCurrentPosition();
+        //armPos = r.leftV4BEnc.getCurrentPosition();
 
         pid = controller.calculate(armPos, target);
         targetArmAngle = target;
