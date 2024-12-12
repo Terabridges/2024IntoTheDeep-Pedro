@@ -28,6 +28,12 @@ public class ServoTest extends LinearOpMode {
     public double leftTarget = positionLeft;
     public double rightTarget = positionRight;
 
+    public static double RPOSEOUT;
+    public static double LPOSEOUT;
+    public static double RPOSEIN;
+    public static double LPOSEIN;
+
+
 
 
     @Override
@@ -47,14 +53,27 @@ public class ServoTest extends LinearOpMode {
             currentGamepad1.copy(gamepad1);
 
 
-            if (currentGamepad1.right_bumper && previousGamepad1.right_bumper) {
-                robot.leftLinear.setPosition(po.LEFT_SLIDE_OUT);
-                robot.rightLinear.setPosition(po.RIGHT_SLIDE_OUT);
+//            if (currentGamepad1.right_bumper && previousGamepad1.right_bumper) {
+//                robot.leftLinear.setPosition(po.LEFT_SLIDE_OUT);
+//                robot.rightLinear.setPosition(po.RIGHT_SLIDE_OUT);
+//            }
+//
+//            if (currentGamepad1.left_bumper && previousGamepad1.left_bumper){
+//                robot.leftLinear.setPosition(po.LEFT_SLIDE_IN);
+//                robot.rightLinear.setPosition(po.RIGHT_SLIDE_IN);
+//            }
+
+//            robot.rightArm.setPower(gamepad1.right_stick_y);
+//            robot.leftArm.setPower(gamepad1.left_stick_y);
+
+            if (currentGamepad1.right_bumper && previousGamepad1.right_bumper){
+                robot.rightLinear.setPosition(RPOSEOUT);
+                robot.leftLinear.setPosition(LPOSEOUT);
             }
 
             if (currentGamepad1.left_bumper && previousGamepad1.left_bumper){
-                robot.leftLinear.setPosition(po.LEFT_SLIDE_IN);
-                robot.rightLinear.setPosition(po.RIGHT_SLIDE_IN);
+                robot.rightLinear.setPosition(RPOSEIN);
+                robot.leftLinear.setPosition(LPOSEIN);
             }
 
             telemetry.addData("Left Slide Position", robot.leftLinear.getPosition());
