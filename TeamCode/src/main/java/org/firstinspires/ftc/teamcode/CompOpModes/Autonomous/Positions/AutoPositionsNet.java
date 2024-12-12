@@ -33,5 +33,5 @@ public class AutoPositionsNet
     public Pose parkPose = new Pose(20, 20, Math.toRadians(180));
 
     /** These are our Paths and PathChains that we will define in buildPaths() */
-    public PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, grabPickup1b, grabPickup2b, grabPickup3b, scorePickup1, scorePickup2, scorePickup3, scoreForward, scoreRetreat, park;
+    public PathChain scorePreload, grabPickup1, grabPickup2, grabPickup3, intake1, intake2, intake3, scorePickup1, scorePickup2, scorePickup3, scoreForward, scoreRetreat, park;
 }

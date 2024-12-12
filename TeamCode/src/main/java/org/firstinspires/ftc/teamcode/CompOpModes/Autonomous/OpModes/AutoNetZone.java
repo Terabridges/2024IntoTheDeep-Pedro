@@ -106,53 +106,28 @@ public class AutoNetZone extends OpMode
 
     public PathState pathState;
     public enum PathState {
-        //Shared
 
+        TO_SCORE_p,
 
-        //Preload
-        ToPRELOAD,
-        RaiseSLIDESp,
-        FORWARDp,
-        OpenCLAWp,
-        RETREATp,
-        RETRACTp,
+        TO_PICKUP_1,
+        TO_PICKUP_2,
+        TO_PICKUP_3,
+        TO_SCORE_1,
+        TO_SCORE_2,
+        TO_SCORE_3,
 
-        //Sample 1
-        ToPICKUP1,
         PICKUP1,
-        TRANSFER1,
-        ToSCORE1a,
-        RaiseSLIDES1,
-        ToSCORE1b,
-        OpenCLAW1,
-        ToSCORE1c,
-        RETRACT1,
-
-        //Sample 2
-        ToPICKUP2,
         PICKUP2,
-        ToSCORE2a,
-
-        //Sample 3
-        ToPICKUP3,
         PICKUP3,
-        ToSCORE3a,
-
-        PICKUP,
+        //Break pickup into pickup1 and pickup2
+        //Pickup 1 just sets up and runs intake (ends at intake idle)
+        //Then follows path (intake1, intake2, intake3, which run slower)
+        //Pickup 2 starts at state intake grab, stops running intake and retracts
         RAISE_SLIDES,
         SCORE_FORWARD,
         OPEN_CLAW,
         SCORE_RETREAT,
         SWITCH,
-
-        TO_PICKUP_1,
-        TO_PICKUP_2,
-        TO_PICKUP_3,
-        TO_SCORE_p,
-        TO_SCORE_1,
-        TO_SCORE_2,
-        TO_SCORE_3,
-
 
         //Other
         PARK,
@@ -210,6 +185,11 @@ public class AutoNetZone extends OpMode
                 .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup1Pose)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup1Pose.getHeading())
                 .build();
+        n.intake1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.pickup1Pose), new Point(n.pickup1Poseb)))
+                .setLinearHeadingInterpolation(n.pickup1Pose.getHeading(), n.pickup1Poseb.getHeading())
+                .setZeroPowerAccelerationMultiplier(1)
+                .build();
 
         n.scorePickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(n.pickup1Poseb), new Point(n.scorePosePT1)))
@@ -221,6 +201,12 @@ public class AutoNetZone extends OpMode
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup2Pose.getHeading())
                 .build();
 
+        n.intake2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.pickup2Pose), new Point(n.pickup2Poseb)))
+                .setLinearHeadingInterpolation(n.pickup2Pose.getHeading(), n.pickup2Poseb.getHeading())
+                .setZeroPowerAccelerationMultiplier(1)
+                .build();
+
         n.scorePickup2 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(n.pickup2Poseb), new Point(n.scorePosePT1)))
                 .setLinearHeadingInterpolation(n.pickup2Poseb.getHeading(), n.scorePosePT1.getHeading())
@@ -229,6 +215,12 @@ public class AutoNetZone extends OpMode
         n.grabPickup3 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(n.scorePosePT1), new Point(n.pickup3Pose)))
                 .setLinearHeadingInterpolation(n.scorePosePT1.getHeading(), n.pickup3Pose.getHeading())
+                .build();
+
+        n.intake3 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(n.pickup3Pose), new Point(n.pickup3Poseb)))
+                .setLinearHeadingInterpolation(n.pickup3Pose.getHeading(), n.pickup3Poseb.getHeading())
+                .setZeroPowerAccelerationMultiplier(1)
                 .build();
 
         n.scorePickup3 = follower.pathBuilder()
@@ -323,30 +315,30 @@ public class AutoNetZone extends OpMode
 
                     follower.followPath(n.grabPickup1, holdPos);
 
-                    pathState = PathState.PICKUP;
+                    pathState = PathState.PICKUP1;
                 break;
             case TO_PICKUP_2:
                 outtakeState2 = OuttakeState2.OUTTAKE2_START;
 
                 follower.followPath(n.grabPickup2, holdPos);
 
-                pathState = PathState.PICKUP;
+                pathState = PathState.PICKUP1;
                 break;
             case TO_PICKUP_3:
                 outtakeState2 = OuttakeState2.OUTTAKE2_START;
 
                 follower.followPath(n.grabPickup3, holdPos);
 
-                pathState = PathState.PICKUP;
+                pathState = PathState.PICKUP1;
                 break;
-            case PICKUP:
+            case PICKUP1:
                 if(currentSample == 1)
                 {
                     if((follower.getPose().getX() > (n.pickup1Pose.getX() - 1) && follower.getPose().getY() > (n.pickup1Pose.getY() - 1)) && outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
                     {
                         intakeState = IntakeState.INTAKE_START;
 
-                        pathState = PathState.TO_SCORE_1;
+                        pathState = PathState.PICKUP2;
                     }
                 }
                 else if(currentSample == 2)
@@ -355,7 +347,7 @@ public class AutoNetZone extends OpMode
                     {
                         intakeState = IntakeState.INTAKE_START;
 
-                        pathState = PathState.TO_SCORE_2;
+                        pathState = PathState.PICKUP2;
                     }
                 }
                 else if(currentSample == 3)
@@ -363,6 +355,46 @@ public class AutoNetZone extends OpMode
                     if((follower.getPose().getX() > (n.pickup3Pose.getX() - 1) && follower.getPose().getY() > (n.pickup3Pose.getY() - 1)) && outtakeState2 == OuttakeState2.OUTTAKE2_IDLE)
                     {
                         intakeState = IntakeState.INTAKE_START;
+
+                        pathState = PathState.PICKUP2;
+                    }
+                }
+                break;
+            case PICKUP2:
+                if (intakeState == IntakeState.INTAKE_IDLE)
+                {
+                    if (currentSample==1)
+                        follower.followPath(n.intake1);
+                    else if (currentSample==2)
+                        follower.followPath(n.intake2);
+                    else if (currentSample==3)
+                        follower.followPath(n.intake3);
+
+                    pathState = PathState.PICKUP3;
+                }
+                break;
+            case PICKUP3:
+                if(currentSample == 1)
+                {
+                    if(follower.getPose().getX() > (n.pickup1Poseb.getX() - 1) && follower.getPose().getY() > (n.pickup1Poseb.getY() - 1))
+                    {
+                        intakeState = IntakeState.INTAKE_GRAB;
+
+                        pathState = PathState.TO_SCORE_1;
+                    }
+                }
+                else if(currentSample == 2)
+                {
+                    if(follower.getPose().getX() > (n.pickup2Poseb.getX() - 1) && follower.getPose().getY() > (n.pickup2Poseb.getY() - 1))                    {
+                        intakeState = IntakeState.INTAKE_GRAB;
+
+                        pathState = PathState.TO_SCORE_2;
+                    }
+                }
+                else if(currentSample == 3)
+                {
+                    if(follower.getPose().getX() > (n.pickup3Poseb.getX() - 1) && follower.getPose().getY() > (n.pickup3Poseb.getY() - 1))                    {
+                        intakeState = IntakeState.INTAKE_GRAB;
 
                         pathState = PathState.TO_SCORE_3;
                     }
@@ -562,27 +594,16 @@ public class AutoNetZone extends OpMode
                         intakePower = -0.25;
                         V4BTarget = po.V4B_INTAKE_POS;
                         intakeTimer.reset();
-                        intakeState = IntakeState.INTAKE_GRAB;
+                        intakeState = IntakeState.INTAKE_IDLE;
                     }
                     break;
                 case INTAKE_GRAB:
-                    if (intakeTimer.milliseconds() >= grabTime+TimeVar+200) {
-                        r.LB.setPower(0);
-                        r.LF.setPower(0);
-                        r.RB.setPower(0);
-                        r.RF.setPower(0);
                         intakePower = 0;
                         V4BTarget = po.V4B_REST_POS;
                         leftLinearTarget = po.LEFT_SLIDE_IN;
                         rightLinearTarget = po.RIGHT_SLIDE_IN;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_RETRACT;
-                    } else {
-                        r.LB.setPower(0.45);
-                        r.LF.setPower(0.45);
-                        r.RB.setPower(0.45);
-                        r.RF.setPower(0.45);
-                    }
                     break;
                 case INTAKE_RETRACT:
                     if (intakeTimer.milliseconds() >= extendTime) {
