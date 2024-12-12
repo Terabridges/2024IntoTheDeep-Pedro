@@ -29,7 +29,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     //First PID for V4B
     private PIDController controller;
     public static double p = 0.005, i = 0.02, d = 0.00004;
-    public static double f = 0.14;
+    public static double f = 0.06;
     private final double ticks_in_degree = 144.0 / 180.0;
     public static int V4BTarget;
     double armPos;

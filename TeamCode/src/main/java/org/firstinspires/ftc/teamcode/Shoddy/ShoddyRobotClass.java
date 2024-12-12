@@ -99,8 +99,6 @@ public class ShoddyRobotClass {
         rightV4BEnc = new AbsoluteAnalogEncoder(leftArmAnalog, 3.3, -150);
         leftV4BEnc = new AbsoluteAnalogEncoder(rightArmAnalog, 3.3, -172);
 
-        leftV4BEnc.setInverted(true);
-
         rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, 21);
 
         distanceSensorRear = myOpMode.hardwareMap.analogInput.get("distance_sensor_rear_2");
