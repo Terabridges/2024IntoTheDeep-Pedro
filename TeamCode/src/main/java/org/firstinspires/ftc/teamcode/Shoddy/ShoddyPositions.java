@@ -15,7 +15,7 @@ public class ShoddyPositions {
 
     //Claw
     public double CLAW_OPEN = 0.65;
-    public double CLAW_CLOSED = 0.55;
+    public double CLAW_CLOSED = 0.52;
 
     //Wrist
     public double WRIST_PAR = 0.25;

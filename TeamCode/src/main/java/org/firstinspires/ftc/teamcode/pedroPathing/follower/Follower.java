@@ -201,6 +201,28 @@ public class Follower {
      * This handles the limiting of the drive powers array to the max power.
      */
     public void limitDrivePowers() {
+
+        double maxP = Double.MIN_VALUE;
+
+        for (int i = 0; i < drivePowers.length; i++) {
+            if (Math.abs(drivePowers[i]) > maxP) {
+                maxP = Math.abs(drivePowers[i]);
+            }
+        }
+
+
+        double scale = maxPower/maxP;
+
+        if (maxP > maxPower) {
+            for (int i = 0; i < drivePowers.length; i++) {
+                drivePowers[i] *= scale;
+            }
+        }
+
+    }
+
+
+    public void limitDrivePowersOld() {
         for (int i = 0; i < drivePowers.length; i++) {
             if (Math.abs(drivePowers[i]) > maxPower) {
                 drivePowers[i] = maxPower * MathFunctions.getSign(drivePowers[i]);
