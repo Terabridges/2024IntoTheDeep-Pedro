@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyPositions;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClass;
+import org.firstinspires.ftc.teamcode.Shoddy.ShoddyTeleOp;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
@@ -148,6 +149,7 @@ public class AutoNetZone extends OpMode
 
     public enum TransferState {
         TRANSFER_START,
+        TRANSFER_START2,
         TRANSFER_INTAKE,
         TRANSFER_CLAW,
         TRANSFER_OUTTAKE,
@@ -254,11 +256,11 @@ public class AutoNetZone extends OpMode
 
                 pathTimer.resetTimer();
 
-                follower.setMaxPower(.75);
+                follower.setMaxPower(.85);
 
                 follower.followPath(n.scorePreload, holdPos);
 
-                pathState = PathState.DELAY;
+                pathState = PathState.SCORE_FORWARD;
                 break;
             case DELAY:
                 if (pathTimer.getElapsedTime() >= 500)
@@ -267,7 +269,7 @@ public class AutoNetZone extends OpMode
                 }
                 break;
             case SCORE_FORWARD:
-                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE) && (pathTimer.getElapsedTime() >= 500))
+                if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE) && (pathTimer.getElapsedTime() >= 100))
                 {
                     follower.setMaxPower(n.pedroSpeed);
 
@@ -286,7 +288,7 @@ public class AutoNetZone extends OpMode
                 }
                 break;
             case SCORE_RETREAT:
-                if (pathTimer.getElapsedTime() >= 650)
+                if (pathTimer.getElapsedTime() >= 400)
                 {
                     pathTimer.resetTimer();
 
@@ -636,25 +638,31 @@ public class AutoNetZone extends OpMode
                 case TRANSFER_START:
                         intakePower = po.INTAKE_SLOW;
                         linearSlidesTarget =po.LINEAR_IN;
+                        V4BTarget = po.V4B_TRANSFER_FLOAT;
+                        transferState = TransferState.TRANSFER_START2;
+                        break;
+                case TRANSFER_START2:
+                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_FLOAT) <= po.SSMservoOff) {
                         V4BTarget = po.V4B_TRANSFER_POS;
                         transferState = TransferState.TRANSFER_INTAKE;
-                        break;
+                    }
+                    break;
                 case TRANSFER_INTAKE:
-                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= 10) {
+                    if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= po.SSMservoOff) {
                         clawTarget = po.CLAW_OPEN;
                         vertSlidesTarget = po.VERTICAL_DOWN;
                         transferState = TransferState.TRANSFER_CLAW;
                     }
                     break;
                 case TRANSFER_CLAW:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= po.SSMmotorOff) {
                         clawTarget = po.CLAW_CLOSED;
                         vertSlidesTarget = po.VERTICAL_REST;
                         transferState = TransferState.TRANSFER_OUTTAKE;
                     }
                     break;
                 case TRANSFER_OUTTAKE:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= po.SSMmotorOff) {
                         intakePower = 0;
                         transferState = TransferState.TRANSFER_IDLE;
                     }
@@ -694,7 +702,7 @@ public class AutoNetZone extends OpMode
                     outtakeState2 = OuttakeState2.OUTTAKE2_RETRACT;
                     break;
                 case OUTTAKE2_RETRACT:
-                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                    if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= po.SSMmotorOff) {
                         outtakeState2 = OuttakeState2.OUTTAKE2_IDLE;
                     }
                     break;

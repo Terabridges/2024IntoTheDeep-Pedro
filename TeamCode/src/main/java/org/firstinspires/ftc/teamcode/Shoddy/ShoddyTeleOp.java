@@ -86,6 +86,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     public enum TransferState {
         TRANSFER_START,
+        TRANSFER_START2,
         TRANSFER_INTAKE,
         TRANSFER_CLAW,
         TRANSFER_OUTTAKE
@@ -313,14 +314,14 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case INTAKE_EXTEND:
-                        if (intakeTimer.milliseconds() >= extendTime) {
+                        if (Math.abs(r.rightLinearEnc.getCurrentPosition() - po.LINEAR_OUT) <= po.SSMservoOff) {
                             V4BTarget = po.V4B_FLOAT;
                             intakeTimer.reset();
                             intakeState = IntakeState.INTAKE_EXTEND2;
                         }
                         break;
                     case INTAKE_EXTEND2:
-                        if (intakeTimer.milliseconds() >= 300) {
+                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_FLOAT) <= po.SSMservoOff) {
                             V4BTarget = po.V4B_INTAKE_POS;
                             intakeState = IntakeState.INTAKE_GRAB;
                         }
@@ -342,7 +343,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case INTAKE_RETRACT:
-                        if (intakeTimer.milliseconds() >= extendTime) {
+                        if (Math.abs(r.rightLinearEnc.getCurrentPosition() - po.LINEAR_IN) <= po.SSMservoOff) {
                             intakeState = IntakeState.INTAKE_START;
                         }
                         break;
@@ -404,7 +405,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case OUTTAKE_RETRACT:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= po.SSMmotorOff) {
                             outtakeState = OuttakeState.OUTTAKE_START;
 
                         }
@@ -423,19 +424,25 @@ public class ShoddyTeleOp extends LinearOpMode {
                             useIntakeManual = false;
                             intakePower = po.INTAKE_SLOW;
                             linearSlidesTarget = po.LINEAR_IN;
+                            V4BTarget = po.V4B_TRANSFER_FLOAT;
+                            transferState = TransferState.TRANSFER_START2;
+                        }
+                        break;
+                    case TRANSFER_START2:
+                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_FLOAT) <= po.SSMservoOff) {
                             V4BTarget = po.V4B_TRANSFER_POS;
                             transferState = TransferState.TRANSFER_INTAKE;
                         }
                         break;
                     case TRANSFER_INTAKE:
-                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= 10) {
+                        if (Math.abs(r.rightV4BEnc.getCurrentPosition() - po.V4B_TRANSFER_POS) <= po.SSMservoOff) {
                             clawTarget = po.CLAW_OPEN;
                             vertSlidesTarget = po.VERTICAL_DOWN;
                             transferState = TransferState.TRANSFER_CLAW;
                         }
                         break;
                     case TRANSFER_CLAW:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= po.SSMmotorOff) {
                             clawTarget = po.CLAW_CLOSED;
                             vertSlidesTarget = po.VERTICAL_REST;
                             intakePower = 0;
@@ -443,7 +450,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         }
                         break;
                     case TRANSFER_OUTTAKE:
-                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                        if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= po.SSMmotorOff) {
                             intakePower = 0;
                             useIntakeManual = true;
                             transferState = TransferState.TRANSFER_START;

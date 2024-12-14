@@ -20,27 +20,30 @@ public class AutoPositionsNet
     net       +x                                                       v
     ___________________
      */
-    public double Off1X = 0;
-    public double Off2X = 0;
-    public double Off3X = 0;
+    public double Off1X = 0.5;
+    public double Off2X = 4;
+    public double Off3X = 5;
     public double Off1Y = 0;
-    public double Off2Y = 0;
-    public double Off3Y = 0;
+    public double Off2Y = 1;
+    public double Off3Y = 2.1;
 
-    public Pose startPose = new Pose(8.5, 87.5, Math.toRadians(180));
+    public double globalX = -0.5;
+    public double globalY = 0;
 
-    public Pose scorePosePT1 = new Pose(22, 118.5, Math.toRadians(-45));
+    public Pose startPose = new Pose(8.5+globalX, 87.5+globalY, Math.toRadians(180));
 
-    public Pose scorePosePT2 = new Pose(21, 123.5, Math.toRadians(-45));
+    public Pose scorePosePT1 = new Pose(26, 119, Math.toRadians(-45));
+
+    public Pose scorePosePT2 = new Pose(25, 124, Math.toRadians(-45));
 
     /* Lowest (First) Sample from the Spike Mark */
-    public Pose pickup1Pose = new Pose(30.8+Off1X, 86.75+Off1Y, Math.toRadians(57.1));
-    public Pose pickup1Poseb = new Pose(35.9+Off1X, 99.5+Off1Y, Math.toRadians(57.1)); //After intake forward, estimated pose
+    public Pose pickup1Pose = new Pose(30.8+Off1X, 86.75+Off1Y, Math.toRadians(56));
+    public Pose pickup1Poseb = new Pose(35.9+Off1X, 99.5+Off1Y, Math.toRadians(56)); //After intake forward, estimated pose
 
     /* Middle (Second) Sample from the Spike Mark */
-    public Pose pickup2Pose = new Pose(30.9+Off2X, 96.75+Off2Y, Math.toRadians(53.2));
+    public Pose pickup2Pose = new Pose(30.9+Off2X, 96.75+Off2Y, Math.toRadians(55.5));
     //public Pose pickup2Control = new Pose(32, 118, Math.toRadians(78)); //Curve control pose
-    public Pose pickup2Poseb = new Pose(36.4+Off2X, 109.5+Off2Y, Math.toRadians(55)); //After intake forward, estimated pose
+    public Pose pickup2Poseb = new Pose(36.4+Off2X, 109.5+Off2Y, Math.toRadians(55.5)); //After intake forward, estimated pose
 
     /* Highest (Third) Sample from the Spike Mark */
     public Pose pickup3Pose = new Pose(46.25+Off3X, 106.5+Off3Y, Math.toRadians(80));
