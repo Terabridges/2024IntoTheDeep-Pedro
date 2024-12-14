@@ -134,7 +134,8 @@ public class AutoNetZone extends OpMode
 
         //Other
         PARK,
-        END
+        END,
+        DELAY
     }
     public enum IntakeState {
         INTAKE_START,
@@ -263,7 +264,13 @@ public class AutoNetZone extends OpMode
 
                 follower.followPath(n.scorePreload, holdPos);
 
-                pathState = PathState.SCORE_FORWARD;
+                pathState = PathState.DELAY;
+                break;
+            case DELAY:
+                if (pathTimer.getElapsedTime() >= 500)
+                {
+                    pathState = PathState.SCORE_FORWARD;
+                }
                 break;
             case SCORE_FORWARD:
                 if(follower.getPose().getX() > (n.scorePosePT1.getX() - 1) && follower.getPose().getY() > (n.scorePosePT1.getY() - 1) && (outtakeState == OuttakeState.OUTTAKE_IDLE) && (pathTimer.getElapsedTime() >= 500))
@@ -612,7 +619,7 @@ public class AutoNetZone extends OpMode
                         break;
                 case INTAKE_EXTEND:
                     if (intakeTimer.milliseconds() >= extendTime) {
-                        intakePower = -0.4;
+                        intakePower = po.INTAKE_POWER_IN;
                         V4BTarget = po.V4B_INTAKE_POS;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_IDLE2;
@@ -637,6 +644,8 @@ public class AutoNetZone extends OpMode
     public void Transfer(){
             switch (transferState) {
                 case TRANSFER_START:
+                        intakePower=po.INTAKE_SLOW;
+
                         leftLinearTarget = po.LEFT_SLIDE_IN;
                         rightLinearTarget = po.RIGHT_SLIDE_IN;
                         V4BTarget = po.V4B_TRANSFER_POS;
@@ -653,6 +662,7 @@ public class AutoNetZone extends OpMode
                     if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
                         clawTarget = po.CLAW_CLOSED;
                         vertSlidesTarget = po.VERTICAL_REST;
+                        intakePower=0;
                         transferState = TransferState.TRANSFER_OUTTAKE;
                     }
                     break;

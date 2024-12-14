@@ -12,6 +12,7 @@ public class ShoddyPositions {
     //Intake
     public double INTAKE_POWER_IN = -0.4;
     public double INTAKE_POWER_OUT = 0.6;
+    public double INTAKE_SLOW = -0.25;
 
     //Claw
     public double CLAW_OPEN = 0.65;

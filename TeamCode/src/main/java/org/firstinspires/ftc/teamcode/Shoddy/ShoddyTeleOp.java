@@ -402,6 +402,9 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case TRANSFER_START:
                         if (t.currentGamepad1.b && !t.previousGamepad1.b){
                             usePIDFvertical = true;
+
+                            intakePower = po.INTAKE_SLOW;
+
                             leftLinearTarget = po.LEFT_SLIDE_IN;
                             rightLinearTarget = po.RIGHT_SLIDE_IN;
                             V4BTarget = po.V4B_TRANSFER_POS;
@@ -419,6 +422,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
                             clawTarget = po.CLAW_CLOSED;
                             vertSlidesTarget = po.VERTICAL_REST;
+                            intakePower = 0;
                             transferState = TransferState.TRANSFER_OUTTAKE;
                         }
                         break;
