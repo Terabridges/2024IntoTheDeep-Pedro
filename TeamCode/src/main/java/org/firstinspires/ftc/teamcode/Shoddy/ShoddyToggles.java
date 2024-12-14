@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.Shoddy;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 public class ShoddyToggles {
-    private LinearOpMode myOpMode = null;
+    private OpMode myOpMode = null;
 
     public Gamepad currentGamepad1 = new Gamepad();
     public Gamepad previousGamepad1 = new Gamepad();
@@ -22,7 +23,7 @@ public class ShoddyToggles {
     public boolean rStickToggle = false;
 
 
-    public ShoddyToggles(LinearOpMode opmode) {
+    public ShoddyToggles(OpMode opmode) {
         myOpMode = opmode;
     }
 

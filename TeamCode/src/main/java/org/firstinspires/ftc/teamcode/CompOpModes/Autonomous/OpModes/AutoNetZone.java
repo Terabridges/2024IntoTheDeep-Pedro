@@ -3,29 +3,18 @@ package org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.OpModes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Shoddy.ShoddyAnalog;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyPositions;
 import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClass;
-import org.firstinspires.ftc.teamcode.Shoddy.ShoddyRobotClassAuto;
-import org.firstinspires.ftc.teamcode.Shoddy.ShoddyTeleOp;
-import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.DashboardPoseTracker;
@@ -39,7 +28,7 @@ import org.firstinspires.ftc.teamcode.CompOpModes.Autonomous.Positions.AutoPosit
 
 public class AutoNetZone extends OpMode
 {
-    public ShoddyRobotClassAuto r;
+    public ShoddyRobotClass r;
     public ShoddyPositions po;
     public AutoPositionsNet n;
 
@@ -58,18 +47,14 @@ public class AutoNetZone extends OpMode
 
     //Other Shit
 
-    double leftLinearTarget;
-    double rightLinearTarget;
     double clawTarget;
     double wristTarget;
-
-    double botVerticalPower = 0;
-    double topVerticalPower = 0;
     double intakePower = 0;
 
     public boolean usePIDFvertical = true;
     public boolean usePIDFswivel = true;
     public boolean usePIDFV4B = true;
+    public boolean usePIDFlinear = true;
 
     //First PID for V4B
     private PIDController controller;
@@ -97,6 +82,15 @@ public class AutoNetZone extends OpMode
     public int swivelTarget;
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
+
+    //Fourth PID for Swivel
+    private PIDController controller4;
+    public static double p4 = 0, i4 = 0, d4 = 0;
+    public static double f4 = 0;
+    private final double ticks_in_degree4 = 144.0 / 180.0;
+    public static int linearSlidesTarget;
+    double armPos4;
+    double pid4, targetArmAngle4, ff4, currentArmAngle4, linearSlidesPower;
 
     public int TimeVar = 100;
     public boolean loopDone = false;
@@ -484,8 +478,6 @@ public class AutoNetZone extends OpMode
         setV4BPIDF(V4BTarget);
         setSwivelPIDF(swivelTarget);
         setVerticalSlidesPIDF(vertSlidesTarget);
-        r.rightLinear.setPosition(rightLinearTarget);
-        r.leftLinear.setPosition(leftLinearTarget);
         r.claw.setPosition(clawTarget);
         r.wrist.setPosition(wristTarget);
         r.intake.setPower(intakePower);
@@ -523,7 +515,7 @@ public class AutoNetZone extends OpMode
     /** This method is called once at the init of the OpMode. **/
     @Override
     public void init() {
-        r = new ShoddyRobotClassAuto(this);
+        r = new ShoddyRobotClass(this);
         n = new AutoPositionsNet();
         po = new ShoddyPositions();
         poseUpdater = new PoseUpdater(hardwareMap);
@@ -555,22 +547,21 @@ public class AutoNetZone extends OpMode
         controller = new PIDController(p, i, d);
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
+        controller4 = new PIDController(p4, i4, d4);
 
         r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         V4BTarget = po.V4B_TRANSFER_POS;
         vertSlidesTarget = po.VERTICAL_REST;
         swivelTarget = po.SWIVEL_DOWN;
-
-        leftLinearTarget = po.LEFT_SLIDE_IN;
-        rightLinearTarget = po.RIGHT_SLIDE_IN;
+        linearSlidesTarget = po.LINEAR_IN;
         wristTarget = po.WRIST_PAR;
 
         double botVerticalPower = 0;
         double topVerticalPower = 0;
         double intakePower = 0;
 
-        r.claw.setPosition(0.51);
+        r.claw.setPosition(po.CLAW_CLOSED);
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
@@ -605,8 +596,7 @@ public class AutoNetZone extends OpMode
     public void GrabSample() {
             switch (intakeState) {
                 case INTAKE_START:
-                        leftLinearTarget = po.LEFT_SLIDE_OUT;
-                        rightLinearTarget = po.RIGHT_SLIDE_OUT;
+                        setLinearPIDF(po.LINEAR_OUT);
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_EXTEND;
                         break;
@@ -621,8 +611,7 @@ public class AutoNetZone extends OpMode
                 case INTAKE_GRAB:
                         intakePower = 0;
                         V4BTarget = po.V4B_REST_POS;
-                        leftLinearTarget = po.LEFT_SLIDE_IN;
-                        rightLinearTarget = po.RIGHT_SLIDE_IN;
+                        setLinearPIDF(po.LINEAR_IN);
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_RETRACT;
                     break;
@@ -637,8 +626,7 @@ public class AutoNetZone extends OpMode
     public void Transfer(){
             switch (transferState) {
                 case TRANSFER_START:
-                        leftLinearTarget = po.LEFT_SLIDE_IN;
-                        rightLinearTarget = po.RIGHT_SLIDE_IN;
+                        setLinearPIDF(po.LINEAR_IN);
                         V4BTarget = po.V4B_TRANSFER_POS;
                         transferState = TransferState.TRANSFER_INTAKE;
                         break;
@@ -749,6 +737,20 @@ public class AutoNetZone extends OpMode
 
         r.leftSwivel.setPower(swivelPower);
         r.rightSwivel.setPower(swivelPower);
+    }
+
+    public void setLinearPIDF(int target4) {
+        controller4.setPID(p4, i4, d4);
+        armPos4 = r.rightLinearEnc.getCurrentPosition();
+        pid4 = controller4.calculate(armPos4, target4);
+        targetArmAngle4 = target4;
+        ff4 = (Math.cos(Math.toRadians(targetArmAngle4))) * f4;
+        currentArmAngle4 = Math.toRadians((armPos4) / ticks_in_degree4);
+
+        linearSlidesPower = pid4 + ff4;
+
+        r.leftLinear.setPower(linearSlidesPower);
+        r.rightLinear.setPower(linearSlidesPower);
     }
 
     public double getVoltage() {

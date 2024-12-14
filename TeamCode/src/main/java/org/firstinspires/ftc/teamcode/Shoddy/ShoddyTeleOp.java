@@ -25,6 +25,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     public boolean usePIDFvertical = true;
     public boolean usePIDFswivel = true;
     public boolean usePIDFV4B = true;
+    public boolean usePIDFlinear = true;
 
     //First PID for V4B
     private PIDController controller;
@@ -52,6 +53,15 @@ public class ShoddyTeleOp extends LinearOpMode {
     public static int swivelTarget;
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
+
+    //Fourth PID for Swivel
+    private PIDController controller4;
+    public static double p4 = 0, i4 = 0, d4 = 0;
+    public static double f4 = 0;
+    private final double ticks_in_degree4 = 144.0 / 180.0;
+    public static int linearSlidesTarget;
+    double armPos4;
+    double pid4, targetArmAngle4, ff4, currentArmAngle4, linearSlidesPower;
 
     //FSM TEST STUFF
     int extendTime = 400;
@@ -161,9 +171,8 @@ public class ShoddyTeleOp extends LinearOpMode {
         V4BTarget = po.V4B_TRANSFER_POS;
         vertSlidesTarget = po.VERTICAL_REST;
         swivelTarget = po.SWIVEL_DOWN;
+        linearSlidesTarget = po.LINEAR_IN;
 
-        leftLinearTarget = po.LEFT_SLIDE_IN;
-        rightLinearTarget = po.RIGHT_SLIDE_IN;
         clawTarget = po.CLAW_CLOSED;
         wristTarget = po.WRIST_PAR;
 
@@ -177,7 +186,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
             //INIT
 
-            distanceOutput = (r.distanceSensorRear.getVoltage()*48.7)-4.9;
+            //distanceOutput = (r.distanceSensorRear.getVoltage()*48.7)-4.9;
 
             //Robot Drive (Left Stick and Right Stick X)
             {
@@ -293,8 +302,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case INTAKE_START:
                         if (t.currentGamepad1.a && !t.previousGamepad1.a){
                             usePIDFvertical = true;
-                            leftLinearTarget = po.LEFT_SLIDE_OUT;
-                            rightLinearTarget = po.RIGHT_SLIDE_OUT;
+                            setLinearPIDF(po.LINEAR_OUT);
                             intakeTimer.reset();
                             intakeState = IntakeState.INTAKE_EXTEND;
                         }
@@ -309,8 +317,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case INTAKE_GRAB:
                         if (t.currentGamepad1.a && !t.previousGamepad1.a) {
                             V4BTarget = po.V4B_REST_POS;
-                            leftLinearTarget = po.LEFT_SLIDE_IN;
-                            rightLinearTarget = po.RIGHT_SLIDE_IN;
+                            setLinearPIDF(po.LINEAR_IN);
                             intakeTimer.reset();
                             if (po.ROHAN_MODE) {
                                 r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -402,8 +409,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case TRANSFER_START:
                         if (t.currentGamepad1.b && !t.previousGamepad1.b){
                             usePIDFvertical = true;
-                            leftLinearTarget = po.LEFT_SLIDE_IN;
-                            rightLinearTarget = po.RIGHT_SLIDE_IN;
+                            setLinearPIDF(po.LINEAR_IN);
                             V4BTarget = po.V4B_TRANSFER_POS;
                             transferState = TransferState.TRANSFER_INTAKE;
                         }
@@ -562,6 +568,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             //Set powers
             setV4BPIDF(V4BTarget);
             setSwivelPIDF(swivelTarget);
+            setLinearPIDF(linearSlidesTarget);
 
             if (usePIDFvertical) {
                 setVerticalSlidesPIDF(vertSlidesTarget);
@@ -570,8 +577,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                 r.topVertical.setPower(topVerticalPower);
             }
 
-            r.rightLinear.setPosition(rightLinearTarget);
-            r.leftLinear.setPosition(leftLinearTarget);
             r.claw.setPosition(clawTarget);
             r.wrist.setPosition(wristTarget);
             r.intake.setPower(intakePower);
@@ -644,6 +649,20 @@ public class ShoddyTeleOp extends LinearOpMode {
 
         r.leftSwivel.setPower(swivelPower);
         r.rightSwivel.setPower(swivelPower);
+    }
+
+    public void setLinearPIDF(int target4) {
+        controller4.setPID(p4, i4, d4);
+        armPos4 = r.rightLinearEnc.getCurrentPosition();
+        pid4 = controller4.calculate(armPos4, target4);
+        targetArmAngle4 = target4;
+        ff4 = (Math.cos(Math.toRadians(targetArmAngle4))) * f4;
+        currentArmAngle4 = Math.toRadians((armPos4) / ticks_in_degree4);
+
+        linearSlidesPower = pid4 + ff4;
+
+        r.leftLinear.setPower(linearSlidesPower);
+        r.rightLinear.setPower(linearSlidesPower);
     }
 
     public double reducePower(double power, double distance, double distanceStartReducing, double distanceToStop){

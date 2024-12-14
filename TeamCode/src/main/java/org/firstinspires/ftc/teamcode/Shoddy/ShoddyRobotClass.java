@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Shoddy;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -11,7 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 
 
 public class ShoddyRobotClass {
-    private LinearOpMode myOpMode = null;
+    private OpMode myOpMode = null;
 
     //Wheel Motors
     public DcMotor LF;
@@ -25,8 +26,8 @@ public class ShoddyRobotClass {
     //public DcMotor emptyMotor;
 
     //Servos
-    public Servo leftLinear;
-    public Servo rightLinear;
+    public CRServo leftLinear;
+    public CRServo rightLinear;
     public CRServo rightArm;
     public CRServo leftArm;
     public CRServo intake;
@@ -37,23 +38,19 @@ public class ShoddyRobotClass {
 
     //Analog
     public AnalogInput leftArmAnalog;
-    public AnalogInput rightArmAnalog;
-    public AnalogInput leftSwivelAnalog;
     public AnalogInput rightSwivelAnalog;
+    public AnalogInput rightLinearAnalog;
 
     public AbsoluteAnalogEncoder rightV4BEnc;
-    public AbsoluteAnalogEncoder leftV4BEnc;
     public AbsoluteAnalogEncoder rightSwivelEnc;
-
-    public AnalogInput distanceSensorRear;
-
+    public AbsoluteAnalogEncoder rightLinearEnc;
     //Other Variables
 
     //Drive Robot Variables
     public static double speedVar = 1;
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
-    public ShoddyRobotClass(LinearOpMode opmode) {
+    public ShoddyRobotClass(OpMode opmode) {
         myOpMode = opmode;
     }
 
@@ -72,18 +69,23 @@ public class ShoddyRobotClass {
 
     }
     public void servoSetUp(){
-        rightLinear = myOpMode.hardwareMap.get(Servo.class, "right_linear");
-        leftLinear = myOpMode.hardwareMap.get(Servo.class, "left_linear");
+        rightLinear = myOpMode.hardwareMap.get(CRServo.class, "right_linear");
+        leftLinear = myOpMode.hardwareMap.get(CRServo.class, "left_linear");
+
         rightArm = myOpMode.hardwareMap.get(CRServo.class, "right_arm");
         leftArm = myOpMode.hardwareMap.get(CRServo.class, "left_arm");
+
         intake = myOpMode.hardwareMap.get(CRServo.class, "intake");
+
         leftSwivel = myOpMode.hardwareMap.get(CRServo.class, "left_swivel");
         rightSwivel = myOpMode.hardwareMap.get(CRServo.class, "right_swivel");
+
         wrist = myOpMode.hardwareMap.get(Servo.class, "wrist");
         claw = myOpMode.hardwareMap.get(Servo.class, "claw");
 
         rightSwivel.setDirection(DcMotorSimple.Direction.REVERSE);
         rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightLinear.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     public void motorSetUp(){
         topVertical = myOpMode.hardwareMap.get(DcMotor.class, "top_vertical");
@@ -94,14 +96,12 @@ public class ShoddyRobotClass {
 
     public void analogSetUp(){
         leftArmAnalog = myOpMode.hardwareMap.analogInput.get("left_analog");
-        rightArmAnalog = myOpMode.hardwareMap.analogInput.get("right_analog");
         rightSwivelAnalog = myOpMode.hardwareMap.analogInput.get("right_swivel_analog");
+        rightLinearAnalog = myOpMode.hardwareMap.analogInput.get("left_linear_analog");
+
         rightV4BEnc = new AbsoluteAnalogEncoder(leftArmAnalog, 3.3, 3);
-        //leftV4BEnc = new AbsoluteAnalogEncoder(rightArmAnalog, 3.3, -172);
-
         rightSwivelEnc = new AbsoluteAnalogEncoder(rightSwivelAnalog, 3.3, 21);
-
-        distanceSensorRear = myOpMode.hardwareMap.analogInput.get("distance_sensor_rear_2");
+        rightLinearEnc = new AbsoluteAnalogEncoder(rightLinearAnalog, 3.3, 0);
     }
 
     public void driveRobot(double lf, double rf, double lb, double rb){

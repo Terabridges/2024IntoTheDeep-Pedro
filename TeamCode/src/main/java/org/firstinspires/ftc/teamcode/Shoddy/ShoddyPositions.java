@@ -3,15 +3,12 @@ package org.firstinspires.ftc.teamcode.Shoddy;
 public class ShoddyPositions {
 
     //Linear Slides
-    public double LEFT_SLIDE_IN = 0.78;
-    public double RIGHT_SLIDE_IN = 0.22;
-
-    public double LEFT_SLIDE_OUT = 0.96;
-    public double RIGHT_SLIDE_OUT = 0.04;
+    public int LINEAR_IN = 227;
+    public int LINEAR_OUT = 190;
 
     //Intake
     public double INTAKE_POWER_IN = -0.4;
-    public double INTAKE_POWER_OUT = 0.6;
+    public double INTAKE_POWER_OUT = 0.4;
 
     //Claw
     public double CLAW_OPEN = 0.65;

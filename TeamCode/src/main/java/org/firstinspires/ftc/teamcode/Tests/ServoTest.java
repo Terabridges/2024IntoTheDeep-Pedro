@@ -66,21 +66,21 @@ public class ServoTest extends LinearOpMode {
 //            robot.rightArm.setPower(gamepad1.right_stick_y);
 //            robot.leftArm.setPower(gamepad1.left_stick_y);
 
-            if (currentGamepad1.right_bumper && previousGamepad1.right_bumper){
-                robot.rightLinear.setPosition(RPOSEOUT);
-                robot.leftLinear.setPosition(LPOSEOUT);
-            }
-
-            if (currentGamepad1.left_bumper && previousGamepad1.left_bumper){
-                robot.rightLinear.setPosition(RPOSEIN);
-                robot.leftLinear.setPosition(LPOSEIN);
-            }
-
-            telemetry.addData("Left Slide Position", robot.leftLinear.getPosition());
-            telemetry.addData("Left Slide Target", positionLeft);
-            telemetry.addData("Right Slide Position", robot.rightLinear.getPosition());
-            telemetry.addData("Right Slide Target", positionRight);
-            telemetry.update();
+//            if (currentGamepad1.right_bumper && previousGamepad1.right_bumper){
+//                robot.rightLinear.setPosition(RPOSEOUT);
+//                robot.leftLinear.setPosition(LPOSEOUT);
+//            }
+//
+//            if (currentGamepad1.left_bumper && previousGamepad1.left_bumper){
+//                robot.rightLinear.setPosition(RPOSEIN);
+//                robot.leftLinear.setPosition(LPOSEIN);
+//            }
+//
+//            telemetry.addData("Left Slide Position", robot.leftLinear.getPosition());
+//            telemetry.addData("Left Slide Target", positionLeft);
+//            telemetry.addData("Right Slide Position", robot.rightLinear.getPosition());
+//            telemetry.addData("Right Slide Target", positionRight);
+//            telemetry.update();
         }
     }
 }
