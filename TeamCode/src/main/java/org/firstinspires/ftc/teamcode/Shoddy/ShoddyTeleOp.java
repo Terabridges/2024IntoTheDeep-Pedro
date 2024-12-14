@@ -409,6 +409,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case TRANSFER_START:
                         if (t.currentGamepad1.b && !t.previousGamepad1.b){
                             usePIDFvertical = true;
+                            intakePower = po.INTAKE_SLOW;
                             setLinearPIDF(po.LINEAR_IN);
                             V4BTarget = po.V4B_TRANSFER_POS;
                             transferState = TransferState.TRANSFER_INTAKE;
