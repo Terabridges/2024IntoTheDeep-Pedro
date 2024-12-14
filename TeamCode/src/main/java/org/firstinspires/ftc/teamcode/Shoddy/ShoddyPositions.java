@@ -28,10 +28,11 @@ public class ShoddyPositions {
     //V4B
     public int V4B_TRANSFER_POS = 76;
     public int V4B_REST_POS = 180;
+    public int V4B_FLOAT = 260;
     public int V4B_INTAKE_POS = 315;
 
     //Swivel
-    public int SWIVEL_DOWN = 150;
+    public int SWIVEL_DOWN = 160;
     public int SWIVEL_UP = 50;
     public int SWIVEL_WALL = 110;
     public int SWIVEL_BAR = 80;

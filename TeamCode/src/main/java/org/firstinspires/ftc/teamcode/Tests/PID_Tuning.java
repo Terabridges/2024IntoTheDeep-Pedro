@@ -53,7 +53,7 @@ public class PID_Tuning extends LinearOpMode {
 
     //Fourth PID for Linear Slides
     private PIDController controller4;
-    public static double p4 = 0, i4 = 0, d4 = 0;
+    public static double p4 = 0.02, i4 = 0.01, d4 = 0.0002;
     public static double f4 = 0;
     private final double ticks_in_degree4 = 144.0 / 180.0;
     public static int linearSlidesTarget;
@@ -89,8 +89,8 @@ public class PID_Tuning extends LinearOpMode {
             //setSwivelPIDF(swivelTarget);
             setLinearPIDF(linearSlidesTarget);
 
-            r.leftLinear.setPower(gamepad1.left_stick_y);
-            r.rightLinear.setPower(gamepad1.right_stick_y);
+//            r.leftLinear.setPower(gamepad1.left_stick_y);
+//            r.rightLinear.setPower(gamepad1.right_stick_y);
 
             /////////////////////////////////////////////////////////////////
 
@@ -164,6 +164,7 @@ public class PID_Tuning extends LinearOpMode {
 
         linearSlidesPower = pid4 + ff4;
 
+        telemetry.addData("Update: ", "reacehed");
         r.leftLinear.setPower(linearSlidesPower);
         r.rightLinear.setPower(linearSlidesPower);
     }

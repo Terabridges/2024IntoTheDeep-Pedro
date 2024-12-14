@@ -83,9 +83,9 @@ public class AutoNetZone extends OpMode
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
-    //Fourth PID for Swivel
+    //Fourth PID for Linear Slides
     private PIDController controller4;
-    public static double p4 = 0, i4 = 0, d4 = 0;
+    public static double p4 = 0.02, i4 = 0.01, d4 = 0.0002;
     public static double f4 = 0;
     private final double ticks_in_degree4 = 144.0 / 180.0;
     public static int linearSlidesTarget;
@@ -485,6 +485,7 @@ public class AutoNetZone extends OpMode
         setV4BPIDF(V4BTarget);
         setSwivelPIDF(swivelTarget);
         setVerticalSlidesPIDF(vertSlidesTarget);
+        setLinearPIDF(linearSlidesTarget);
         r.claw.setPosition(clawTarget);
         r.wrist.setPosition(wristTarget);
         r.intake.setPower(intakePower);
@@ -603,7 +604,7 @@ public class AutoNetZone extends OpMode
     public void GrabSample() {
             switch (intakeState) {
                 case INTAKE_START:
-                        setLinearPIDF(po.LINEAR_OUT);
+                        linearSlidesTarget = po.LINEAR_OUT;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_EXTEND;
                         break;
@@ -618,7 +619,7 @@ public class AutoNetZone extends OpMode
                 case INTAKE_GRAB:
                         intakePower = 0;
                         V4BTarget = po.V4B_REST_POS;
-                        setLinearPIDF(po.LINEAR_IN);
+                        linearSlidesTarget = po.LINEAR_IN;
                         intakeTimer.reset();
                         intakeState = IntakeState.INTAKE_RETRACT;
                     break;
@@ -633,7 +634,8 @@ public class AutoNetZone extends OpMode
     public void Transfer(){
             switch (transferState) {
                 case TRANSFER_START:
-                        setLinearPIDF(po.LINEAR_IN);
+                        intakePower = po.INTAKE_SLOW;
+                        linearSlidesTarget =po.LINEAR_IN;
                         V4BTarget = po.V4B_TRANSFER_POS;
                         transferState = TransferState.TRANSFER_INTAKE;
                         break;
@@ -648,12 +650,12 @@ public class AutoNetZone extends OpMode
                     if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_DOWN) <= 50) {
                         clawTarget = po.CLAW_CLOSED;
                         vertSlidesTarget = po.VERTICAL_REST;
-                        intakePower=0;
                         transferState = TransferState.TRANSFER_OUTTAKE;
                     }
                     break;
                 case TRANSFER_OUTTAKE:
                     if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                        intakePower = 0;
                         transferState = TransferState.TRANSFER_IDLE;
                     }
                     break;

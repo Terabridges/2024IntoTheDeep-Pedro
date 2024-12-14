@@ -56,7 +56,7 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     //Fourth PID for Swivel
     private PIDController controller4;
-    public static double p4 = 0, i4 = 0, d4 = 0;
+    public static double p4 = 0.02, i4 = 0.01, d4 = 0.0002;
     public static double f4 = 0;
     private final double ticks_in_degree4 = 144.0 / 180.0;
     public static int linearSlidesTarget;
@@ -71,6 +71,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     public enum IntakeState {
         INTAKE_START,
         INTAKE_EXTEND,
+        INTAKE_EXTEND2,
         INTAKE_GRAB,
         INTAKE_RETRACT
     };
@@ -131,6 +132,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         controller = new PIDController(p, i, d);
         controller2 = new PIDController(p2, i2, d2);
         controller3 = new PIDController(p3, i3, d3);
+        controller4 = new PIDController(p4, i4, d4);
 
         //TODO Turn off for competitions
         r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -147,6 +149,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         boolean triggerIntake = true;
         boolean resetState = false;
         boolean manualPower = true;
+        boolean useIntakeManual = true;
 
         boolean encodersReset = false;
 
@@ -286,12 +289,14 @@ public class ShoddyTeleOp extends LinearOpMode {
                         vertSlidesTarget = r.topVertical.getCurrentPosition();
                     }
                 } else {
-                    if (t.currentGamepad1.right_trigger > po.MIN_TRIGGER_VAL) {
-                        intakePower = t.currentGamepad1.right_trigger;
-                    } else if (t.currentGamepad1.left_trigger > po.MIN_TRIGGER_VAL) {
-                        intakePower = -t.currentGamepad1.left_trigger;
-                    } else {
-                        intakePower = 0;
+                    if (useIntakeManual) {
+                        if (t.currentGamepad1.right_trigger > po.MIN_TRIGGER_VAL) {
+                            intakePower = t.currentGamepad1.right_trigger;
+                        } else if (t.currentGamepad1.left_trigger > po.MIN_TRIGGER_VAL) {
+                            intakePower = -t.currentGamepad1.left_trigger;
+                        } else {
+                            intakePower = 0;
+                        }
                     }
                 }
             }
@@ -302,22 +307,28 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case INTAKE_START:
                         if (t.currentGamepad1.a && !t.previousGamepad1.a){
                             usePIDFvertical = true;
-                            setLinearPIDF(po.LINEAR_OUT);
+                            linearSlidesTarget = po.LINEAR_OUT;
                             intakeTimer.reset();
                             intakeState = IntakeState.INTAKE_EXTEND;
                         }
                         break;
                     case INTAKE_EXTEND:
                         if (intakeTimer.milliseconds() >= extendTime) {
-                            V4BTarget = po.V4B_INTAKE_POS;
+                            V4BTarget = po.V4B_FLOAT;
                             intakeTimer.reset();
+                            intakeState = IntakeState.INTAKE_EXTEND2;
+                        }
+                        break;
+                    case INTAKE_EXTEND2:
+                        if (intakeTimer.milliseconds() >= 300) {
+                            V4BTarget = po.V4B_INTAKE_POS;
                             intakeState = IntakeState.INTAKE_GRAB;
                         }
                         break;
                     case INTAKE_GRAB:
                         if (t.currentGamepad1.a && !t.previousGamepad1.a) {
                             V4BTarget = po.V4B_REST_POS;
-                            setLinearPIDF(po.LINEAR_IN);
+                            linearSlidesTarget = po.LINEAR_IN;
                             intakeTimer.reset();
                             if (po.ROHAN_MODE) {
                                 r.LB.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -409,8 +420,9 @@ public class ShoddyTeleOp extends LinearOpMode {
                     case TRANSFER_START:
                         if (t.currentGamepad1.b && !t.previousGamepad1.b){
                             usePIDFvertical = true;
+                            useIntakeManual = false;
                             intakePower = po.INTAKE_SLOW;
-                            setLinearPIDF(po.LINEAR_IN);
+                            linearSlidesTarget = po.LINEAR_IN;
                             V4BTarget = po.V4B_TRANSFER_POS;
                             transferState = TransferState.TRANSFER_INTAKE;
                         }
@@ -432,6 +444,8 @@ public class ShoddyTeleOp extends LinearOpMode {
                         break;
                     case TRANSFER_OUTTAKE:
                         if (Math.abs(r.topVertical.getCurrentPosition() - po.VERTICAL_REST) <= 50) {
+                            intakePower = 0;
+                            useIntakeManual = true;
                             transferState = TransferState.TRANSFER_START;
                         }
                         break;
