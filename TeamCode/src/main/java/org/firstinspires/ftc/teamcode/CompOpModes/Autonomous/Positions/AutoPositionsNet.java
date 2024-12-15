@@ -21,20 +21,20 @@ public class AutoPositionsNet
     ___________________
      */
     public double Off1X = 0.5;
-    public double Off2X = 4;
-    public double Off3X = 5;
+    public double Off2X = 4.8;
+    public double Off3X = 5.75;
     public double Off1Y = 0;
     public double Off2Y = 1;
-    public double Off3Y = 2.1;
+    public double Off3Y = 2;
 
     public double globalX = -0.5;
     public double globalY = 0;
 
     public Pose startPose = new Pose(8.5+globalX, 87.5+globalY, Math.toRadians(180));
 
-    public Pose scorePosePT1 = new Pose(26, 119, Math.toRadians(-45));
+    public Pose scorePosePT1 = new Pose(26, 119.5, Math.toRadians(-45));
 
-    public Pose scorePosePT2 = new Pose(25, 124, Math.toRadians(-45));
+    public Pose scorePosePT2 = new Pose(25, 125, Math.toRadians(-45));
 
     /* Lowest (First) Sample from the Spike Mark */
     public Pose pickup1Pose = new Pose(30.8+Off1X, 86.75+Off1Y, Math.toRadians(56));

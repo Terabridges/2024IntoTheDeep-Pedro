@@ -136,7 +136,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         controller4 = new PIDController(p4, i4, d4);
 
         //TODO Turn off for competitions
-        r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         double leftLinearTarget;
         double rightLinearTarget;

@@ -7,7 +7,7 @@ public class ShoddyPositions {
     public int LINEAR_OUT = 190;
 
     //Intake
-    public double INTAKE_POWER_IN = -0.35;
+    public double INTAKE_POWER_IN = -0.345;
     public double INTAKE_POWER_OUT = 0.6;
     public double INTAKE_SLOW = -0.25;
 
@@ -27,7 +27,7 @@ public class ShoddyPositions {
 
     //V4B
     public int V4B_TRANSFER_POS = 76;
-    public int V4B_TRANSFER_FLOAT = 100;
+    public int V4B_TRANSFER_FLOAT = 95;
     public int V4B_REST_POS = 180;
     public int V4B_FLOAT = 260;
     public int V4B_INTAKE_POS = 315;

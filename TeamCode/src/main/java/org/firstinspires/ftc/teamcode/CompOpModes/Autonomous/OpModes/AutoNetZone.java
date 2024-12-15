@@ -319,7 +319,7 @@ public class AutoNetZone extends OpMode
                     else if (currentSample==3)
                     {
                         currentSample = 0;
-                        pathState = PathState.PARK;
+                        pathState = PathState.END;
                     }
                 }
                 break;
@@ -461,7 +461,10 @@ public class AutoNetZone extends OpMode
             case END:
                 if(follower.getPose().getX() > (n.parkPose.getX() - 1) && follower.getPose().getY() > (n.parkPose.getY() - 1))
                 {
-                    //Set motors for teleop
+                    vertSlidesTarget = po.VERTICAL_DOWN;
+                    clawTarget = po.CLAW_CLOSED;
+                    swivelTarget = po.SWIVEL_DOWN;
+                    wristTarget = po.WRIST_PAR;
                 }
 
 
