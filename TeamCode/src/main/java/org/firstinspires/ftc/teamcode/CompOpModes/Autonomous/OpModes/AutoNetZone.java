@@ -461,7 +461,7 @@ public class AutoNetZone extends OpMode
             case END:
                 if(follower.getPose().getX() > (n.parkPose.getX() - 1) && follower.getPose().getY() > (n.parkPose.getY() - 1))
                 {
-                    vertSlidesTarget = po.VERTICAL_DOWN;
+                    //vertSlidesTarget = po.VERTICAL_DOWN;
                     clawTarget = po.CLAW_CLOSED;
                     swivelTarget = po.SWIVEL_DOWN;
                     wristTarget = po.WRIST_PAR;

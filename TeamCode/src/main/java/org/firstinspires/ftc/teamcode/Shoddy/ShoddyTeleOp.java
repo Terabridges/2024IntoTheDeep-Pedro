@@ -306,7 +306,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             {
                 switch (intakeState) {
                     case INTAKE_START:
-                        if (t.currentGamepad1.a && !t.previousGamepad1.a){
+                        if (noOtherStates() && t.currentGamepad1.a && !t.previousGamepad1.a){
                             usePIDFvertical = true;
                             linearSlidesTarget = po.LINEAR_OUT;
                             intakeTimer.reset();
@@ -357,7 +357,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             {
                 switch (outtakeState) {
                     case OUTTAKE_START:
-                        if (t.currentGamepad1.y && !t.previousGamepad1.y){
+                        if (noOtherStates() && t.currentGamepad1.y && !t.previousGamepad1.y){
                             usePIDFvertical = true;
                             vertSlidesTarget = po.VERTICAL_UP;
                             swivelTarget = po.SWIVEL_UP;
@@ -419,7 +419,7 @@ public class ShoddyTeleOp extends LinearOpMode {
             {
                 switch (transferState) {
                     case TRANSFER_START:
-                        if (t.currentGamepad1.b && !t.previousGamepad1.b){
+                        if (noOtherStates() && t.currentGamepad1.b && !t.previousGamepad1.b){
                             usePIDFvertical = true;
                             useIntakeManual = false;
                             intakePower = po.INTAKE_SLOW;
@@ -518,16 +518,21 @@ public class ShoddyTeleOp extends LinearOpMode {
             }
 
 
-            //Nothing currently (dpad up)
+            //Reset (dpad up)
             {
-
+//                if (t.currentGamepad1.dpad_up && !t.previousGamepad1.dpad_up) {
+//                    swivelTarget = po.SWIVEL_DOWN;
+//                    wristTarget = po.WRIST_PAR;
+//                    clawTarget = po.CLAW_CLOSED;
+//                    vertSlidesTarget = po.VERTICAL_DOWN;
+//                }
             }
 
             //Set Swivel for wall grab
             {
                 switch (specimenState){
                     case SPECIMEN_START:
-                        if (t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down){
+                        if (noOtherStates() && t.currentGamepad1.dpad_down && !t.previousGamepad1.dpad_down){
                             usePIDFvertical = true;
                             clawTarget = po.CLAW_OPEN;
                             wristTarget = po.WRIST_PERP;
@@ -706,6 +711,13 @@ public class ShoddyTeleOp extends LinearOpMode {
 
     public double reducePower(double power){
         return this.reducePower(power, distanceOutput, defaultDistanceReduce, defaultDistanceStop);
+    }
+
+    public boolean noOtherStates(){
+        return intakeState == IntakeState.INTAKE_START
+                && outtakeState == OuttakeState.OUTTAKE_START
+                && transferState == TransferState.TRANSFER_START
+                && specimenState == SpecimenState.SPECIMEN_START;
     }
 }
 
