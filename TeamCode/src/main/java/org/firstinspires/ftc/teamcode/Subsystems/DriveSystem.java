@@ -5,18 +5,22 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 
-public class Drivebase implements Subsystem {
+public class DriveSystem implements Subsystem {
 
+    //Hardware
+
+
+    //Software
     public Follower drive;
     public static final double CENTER_DIST = 8.25;
     public boolean driveDisable = false;
 
     //Constructor
-    public Drivebase(HardwareMap map, Pose pos) {
+    public DriveSystem(HardwareMap map, Pose pos) {
         drive = new Follower(map);
         drive.setPose(pos);
     }
-    public Drivebase(HardwareMap map) {
+    public DriveSystem(HardwareMap map) {
         this(map, new Pose(0, 0, 0));
     }
 

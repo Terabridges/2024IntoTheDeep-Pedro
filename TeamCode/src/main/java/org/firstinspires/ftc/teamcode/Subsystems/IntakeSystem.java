@@ -4,52 +4,54 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 
 @Config
 public class IntakeSystem implements Subsystem {
 
     //Hardware
-    public static Servo leftLinear;
-    public static Servo rightLinear;
-    public static CRServo rightArm;
-    public static CRServo leftArm;
-    public static CRServo intake;
-    public static AnalogInput leftArmAnalog;
-    public static AnalogInput rightArmAnalog;
+    public CRServo intakeLeftSlide;
+    public CRServo intakeRightSlide;
+    public CRServo intakeRightSwivel;
+    public CRServo intakeLeftSwivel;
+    public CRServo intakeSpin;
+    public AnalogInput intakeRightSwivelAnalog;
+    public AnalogInput intakeRightLinearAnalog;
+    public AbsoluteAnalogEncoder intakeRightSwivelEnc;
+    public AbsoluteAnalogEncoder intakeRightLinearEnc;
 
     //Software
-    public static double RIGHT_SLIDE_RETRACT = 0.15;
-    public static double RIGHT_SLIDE_EXTEND = 0;
-    public static double LEFT_SLIDE_RETRACT = 0.85;
-    public static double LEFT_SLIDE_EXTEND = 1;
-    public static double INTAKE_PULL_IN = -0.4;
-    public static double INTAKE_PULL_OUT = 0.4;
+    public double RIGHT_SLIDE_RETRACT = 0.15;
+    public double RIGHT_SLIDE_EXTEND = 0;
+    public double LEFT_SLIDE_RETRACT = 0.85;
+    public double LEFT_SLIDE_EXTEND = 1;
+    public double INTAKE_PULL_IN = -0.4;
+    public double INTAKE_PULL_OUT = 0.4;
 
     //Constructor
     public IntakeSystem(HardwareMap map) {
-        leftLinear = map.get(Servo.class, "left_linear");
-        rightLinear = map.get(Servo.class, "right_linear");
-        leftArm = map.get(CRServo.class, "leftArm");
-        rightArm = map.get(CRServo.class, "right_arm");
-        intake = map.get(CRServo.class, "intake");
-        leftArmAnalog = map.get(AnalogInput.class, "left_analog");
-        rightArmAnalog = map.get(AnalogInput.class, "right_analog");
+        intakeLeftSlide = map.get(CRServo.class, "intake_left_linear");
+        intakeRightSlide = map.get(CRServo.class, "intake_right_linear");
+        intakeLeftSwivel = map.get(CRServo.class, "intake_left_swivel");
+        intakeRightSwivel = map.get(CRServo.class, "intake_right_swivel");
+        intakeSpin = map.get(CRServo.class, "intake_spin");
+        intakeRightSwivelAnalog = map.get(AnalogInput.class, "intake_right_swivel_analog");
+        intakeRightLinearAnalog = map.get(AnalogInput.class, "intake_right_linear_analog");
+
     }
 
     //Methods
-    public void setLinear(double lPos, double rPos) {
-        leftLinear.setPosition(lPos);
-        rightLinear.setPosition(rPos);
+    public void intakeSetSlides(double lPos, double rPos) {
+
     }
 
-    public void setArm(double lPow, double rPow) {
-        leftArm.setPower(lPow);
-        rightArm.setPower(rPow);
+    public void intakeSetSwivel(double lPos, double rPos) {
+
     }
 
-    public void setIntake(double pow) {
-        intake.setPower(pow);
+    public void intakeSetSpin(double pow) {
+
     }
 
     //Interface Methods
@@ -60,6 +62,7 @@ public class IntakeSystem implements Subsystem {
 
     @Override
     public void update(){
+
     }
 
 }

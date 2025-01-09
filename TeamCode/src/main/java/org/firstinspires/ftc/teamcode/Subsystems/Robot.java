@@ -24,8 +24,7 @@ public class Robot {
     //Subsystems
     public IntakeSystem intakeSystem;
     public OuttakeSystem outtakeSystem;
-    public TransferSystem transferSystem;
-    public Drivebase drivebase;
+    public DriveSystem driveSystem;
 
     //Subsystem List
     public List<Subsystem> subsystems;
@@ -35,13 +34,12 @@ public class Robot {
         hardwareMap = map;
         telemetry = t;
 
-        drivebase = new Drivebase(hardwareMap);
+        driveSystem = new DriveSystem(hardwareMap);
 
         outtakeSystem = new OuttakeSystem(hardwareMap);
         intakeSystem = new IntakeSystem(hardwareMap);
-        transferSystem = new TransferSystem(hardwareMap);
 
-        subsystems = new ArrayList<>(Arrays.asList(outtakeSystem, intakeSystem, transferSystem, drivebase));
+        subsystems = new ArrayList<>(Arrays.asList(outtakeSystem, intakeSystem, driveSystem));
 
         this.gp1 = gp1;
 
