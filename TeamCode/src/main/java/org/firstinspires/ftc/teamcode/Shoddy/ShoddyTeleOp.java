@@ -233,13 +233,6 @@ public class ShoddyTeleOp extends LinearOpMode {
 
             // Use Reduce Speed Mode (dpad left)
             {
-//                if (t.toggle("dpad_right")) {
-//                    if (t.dpRightToggle) {
-//                        intakePower = po.INTAKE_POWER_IN;
-//                    } else {
-//                        intakePower = 0;
-//                    }
-//                }
 
                 if (t.toggle("dpad_left")) {
                     if (t.dpLeftToggle) {
@@ -528,6 +521,13 @@ public class ShoddyTeleOp extends LinearOpMode {
 //                }
             }
 
+            //Reset encoders (dpad right)
+            {
+                if (t.currentGamepad1.dpad_right && !t.previousGamepad1.dpad_right) {
+                    r.topVertical.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                }
+            }
+
             //Set Swivel for wall grab
             {
                 switch (specimenState){
@@ -591,7 +591,6 @@ public class ShoddyTeleOp extends LinearOpMode {
                         specimenState = SpecimenState.SPECIMEN_START;
                 }
             }
-
 
             //Set powers
             setV4BPIDF(V4BTarget);

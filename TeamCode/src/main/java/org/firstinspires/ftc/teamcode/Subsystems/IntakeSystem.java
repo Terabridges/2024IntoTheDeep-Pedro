@@ -28,6 +28,11 @@ public class IntakeSystem implements Subsystem {
     public double LEFT_SLIDE_EXTEND = 1;
     public double INTAKE_PULL_IN = -0.4;
     public double INTAKE_PULL_OUT = 0.4;
+    public double LEFT_SLIDE_MAX_POWER;
+    public double RIGHT_SLIDE_MAX_POWER;
+    public double LEFT_SWIVEL_MAX_POWER;
+    public double RIGHT_SWIVEL_MAX_POWER;
+    public double INTAKE_MAX_POWER;
 
     //Constructor
     public IntakeSystem(HardwareMap map) {
@@ -42,16 +47,23 @@ public class IntakeSystem implements Subsystem {
     }
 
     //Methods
-    public void intakeSetSlides(double lPos, double rPos) {
-
+    public void intakeSetSlides(double lPow, double rPow) {
+        if(lPow > LEFT_SLIDE_MAX_POWER) lPow = LEFT_SLIDE_MAX_POWER;
+        if(rPow > RIGHT_SLIDE_MAX_POWER) rPow = RIGHT_SLIDE_MAX_POWER;
+        intakeLeftSlide.setPower(lPow);
+        intakeRightSlide.setPower(rPow);
     }
 
-    public void intakeSetSwivel(double lPos, double rPos) {
-
+    public void intakeSetSwivel(double lPow, double rPow) {
+        if(lPow > LEFT_SWIVEL_MAX_POWER) lPow = LEFT_SWIVEL_MAX_POWER;
+        if(rPow > RIGHT_SWIVEL_MAX_POWER) rPow = RIGHT_SWIVEL_MAX_POWER;
+        intakeLeftSwivel.setPower(lPow);
+        intakeRightSwivel.setPower(rPow);
     }
 
     public void intakeSetSpin(double pow) {
-
+        if(pow > INTAKE_MAX_POWER) pow = INTAKE_MAX_POWER;
+        intakeSpin.setPower(pow);
     }
 
     //Interface Methods
