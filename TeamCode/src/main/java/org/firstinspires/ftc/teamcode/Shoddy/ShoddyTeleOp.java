@@ -54,7 +54,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     double armPos3;
     double pid3, targetArmAngle3, ff3, currentArmAngle3, swivelPower;
 
-    //Fourth PID for Swivel
+    //Fourth PID for linear
     private PIDController controller4;
     public static double p4 = 0.02, i4 = 0.01, d4 = 0.0002;
     public static double f4 = 0;

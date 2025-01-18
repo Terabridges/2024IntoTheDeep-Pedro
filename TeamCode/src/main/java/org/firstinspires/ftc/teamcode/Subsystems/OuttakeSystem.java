@@ -20,7 +20,30 @@ public class OuttakeSystem implements Subsystem {
     public AnalogInput outtakeRightSwivelAnalog;
     public AbsoluteAnalogEncoder outtakeRightSwivelEnc;
 
-    //Software
+    //SOFTWARE
+    //Positions
+    private double CLAW_OPEN;
+    private double CLAW_CLOSE;
+    private double WRIST_PERP;
+    private double WRIST_PAR;
+    private int OUTTAKE_SWIVEL_UP;
+    private int OUTTAKE_SWIVEL_DOWN;
+    private int OUTTAKE_SLIDES_HIGH;
+    private int OUTTAKE_SLIDES_LOW;
+    private int OUTTAKE_SLIDES_DOWN;
+    private int OUTTAKE_SLIDES_REST;
+
+    //Targets
+    private int outtakeSlidesTarget;
+    private int outtakeSwivelTarget;
+    private double clawTarget;
+    private double wristTarget;
+
+    //Max
+    private double OUTTAKE_SLIDES_MAX_POWER;
+    private double OUTTAKE_SWIVEL_MAX_POWER;
+
+    //PIDF
 
     //Constructor
     public OuttakeSystem(HardwareMap map) {
@@ -33,17 +56,93 @@ public class OuttakeSystem implements Subsystem {
         outtakeRightSwivelAnalog = map.get(AnalogInput.class, "outtake_right_swivel_analog");
     }
 
-    //Methods
+    //METHODS
+    //Core Methods
+    public void outtakeSetSlides(double pow) {
+        if(pow > OUTTAKE_SLIDES_MAX_POWER) pow = OUTTAKE_SLIDES_MAX_POWER;
+        outtakeBottomVertical.setPower(pow);
+        outtakeTopVertical.setPower(pow);
+    }
+
+    public void outtakeSetSwivel(double pow) {
+        if(pow > OUTTAKE_SWIVEL_MAX_POWER) pow = OUTTAKE_SWIVEL_MAX_POWER;
+        outtakeLeftSwivel.setPower(pow);
+        outtakeRightSwivel.setPower(pow);
+    }
+
+    public void setClaw(double pos) {
+        outtakeClaw.setPosition(pos);
+    }
+
+    public void setWrist(double pos) {
+        outtakeWrist.setPosition(pos);
+    }
+
+    //Other Methods
+    public void outtakeSlidesHigh(){
+        outtakeSlidesTarget = OUTTAKE_SLIDES_HIGH;
+    }
+
+    public void outtakeSlidesLow(){
+        outtakeSlidesTarget = OUTTAKE_SLIDES_LOW;
+    }
+
+    public void outtakeSlidesDown(){
+        outtakeSlidesTarget = OUTTAKE_SLIDES_DOWN;
+    }
+
+    public void outtakeSlidesRest() {
+        outtakeSlidesTarget = OUTTAKE_SLIDES_REST;
+    }
+
+    public void outtakeSwivelUp() {
+        outtakeSwivelTarget = OUTTAKE_SWIVEL_UP;
+    }
+
+    public void outtakeSwivelDown() {
+        outtakeSwivelTarget = OUTTAKE_SWIVEL_DOWN;
+    }
+
+    public void openClaw() {
+        clawTarget = CLAW_OPEN;
+    }
+
+    public void closeClaw() {
+        clawTarget = CLAW_CLOSE;
+    }
+
+    public void wristPar() {
+        wristTarget = WRIST_PAR;
+    }
+
+    public void wristPerp() {
+        wristTarget = WRIST_PERP;
+    }
+
+    //PIDF
+    private int setOuttakeSlidesPIDF(int target) {
+        return 0;
+    }
+
+    private int setOuttakeSwivelPIDF(int target) {
+        return 0;
+    }
 
     //Interface Methods
     @Override
     public void toInit(){
-        //startupcode
+        outtakeSlidesDown();
+        outtakeSwivelDown();
+        closeClaw();
+        wristPar();
     }
 
     @Override
     public void update(){
-
+        outtakeSetSlides(setOuttakeSlidesPIDF(outtakeSlidesTarget));
+        outtakeSetSwivel(setOuttakeSwivelPIDF(outtakeSwivelTarget));
+        setClaw(clawTarget);
+        setWrist(wristTarget);
     }
 
 }
