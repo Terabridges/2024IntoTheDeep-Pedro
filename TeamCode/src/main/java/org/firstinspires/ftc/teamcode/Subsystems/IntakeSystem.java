@@ -12,36 +12,44 @@ import org.firstinspires.ftc.teamcode.Utility.AbsoluteAnalogEncoder;
 public class IntakeSystem implements Subsystem {
 
     //Hardware
-    private CRServo intakeLeftSlide;
-    private CRServo intakeRightSlide;
-    private CRServo intakeRightSwivel;
-    private CRServo intakeLeftSwivel;
-    private CRServo intakeSpin;
-    private AnalogInput intakeRightSwivelAnalog;
-    private AnalogInput intakeRightLinearAnalog;
-    private AbsoluteAnalogEncoder intakeRightSwivelEnc;
-    private AbsoluteAnalogEncoder intakeRightLinearEnc;
+    public CRServo intakeLeftSlide;
+    public CRServo intakeRightSlide;
+    public CRServo intakeRightSwivel;
+    public CRServo intakeLeftSwivel;
+    public CRServo intakeSpin;
+    public AnalogInput intakeRightSwivelAnalog;
+    public AnalogInput intakeRightLinearAnalog;
+    public AbsoluteAnalogEncoder intakeRightSwivelEnc;
+    public AbsoluteAnalogEncoder intakeRightLinearEnc;
 
     //SOFTWARE
+    public boolean usePIDFIntakeSlides = true;
+    public boolean usePIDFIntakeSwivel = true;
+
     //Positions
-    private double INTAKE_SPIN_IN = -0.4;
-    private double INTAKE_SPIN_OUT = 0.4;
-    private double INTAKE_SPIN_STOP = 0;
-    private int INTAKE_SLIDES_EXTEND = 227;
-    private int INTAKE_SLIDES_RETRACT = 190;
-    private int INTAKE_SWIVEL_TRANSFER;
-    private int INTAKE_SWIVEL_DOWN;
-    private int INTAKE_SWIVEL_REST;
+    public double INTAKE_SPIN_IN = -0.4;
+    public double INTAKE_SPIN_OUT = 0.4;
+    public double INTAKE_SPIN_STOP = 0;
+    public int INTAKE_SLIDES_EXTEND = 227;
+    public int INTAKE_SLIDES_RETRACT = 190;
+    public int INTAKE_SWIVEL_TRANSFER;
+    public int INTAKE_SWIVEL_DOWN;
+    public int INTAKE_SWIVEL_REST;
+    public double INTAKE_SLIDES_MANUAL_OUT = 0.3;
+    public double INTAKE_SLIDES_MANUAL_IN = -0.3;
+    public double INTAKE_SLIDES_MANUAL_STOP = 0;
 
     //Targets
-    private int intakeSlidesTarget;
-    private int intakeSwivelTarget;
-    private double intakeSpinTarget = 0;
+    public int intakeSlidesTarget;
+    public int intakeSwivelTarget;
+    public double intakeSpinTarget = 0;
+    public double intakeSlidesManualPower;
+    public double intakeSwivelManualPower;
 
     //Max
-    private double INTAKE_SLIDES_MAX_POWER;;
-    private double INTAKE_SWIVEL_MAX_POWER;
-    private double INTAKE_SPIN_MAX_POWER;
+    public double INTAKE_SLIDES_MAX_POWER = 1.0;
+    public double INTAKE_SWIVEL_MAX_POWER = 1.0;
+    public double INTAKE_SPIN_MAX_POWER = 1.0;
 
     //PIDF
 
@@ -63,18 +71,21 @@ public class IntakeSystem implements Subsystem {
     //Core Methods
     public void intakeSetSlides(double pow) {
         if(pow > INTAKE_SLIDES_MAX_POWER) pow = INTAKE_SLIDES_MAX_POWER;
+        if(pow < -INTAKE_SLIDES_MAX_POWER) pow = -INTAKE_SLIDES_MAX_POWER;
         intakeLeftSlide.setPower(pow);
         intakeRightSlide.setPower(pow);
     }
 
     public void intakeSetSwivel(double pow) {
         if(pow > INTAKE_SWIVEL_MAX_POWER) pow = INTAKE_SWIVEL_MAX_POWER;
+        if(pow < -INTAKE_SWIVEL_MAX_POWER) pow = -INTAKE_SWIVEL_MAX_POWER;
         intakeLeftSwivel.setPower(pow);
         intakeRightSwivel.setPower(pow);
     }
 
     public void intakeSetSpin(double pow) {
         if(pow > INTAKE_SPIN_MAX_POWER) pow = INTAKE_SPIN_MAX_POWER;
+        if(pow < -INTAKE_SPIN_MAX_POWER) pow = -INTAKE_SPIN_MAX_POWER;
         intakeSpin.setPower(pow);
     }
 
@@ -111,6 +122,12 @@ public class IntakeSystem implements Subsystem {
         intakeSpinTarget = INTAKE_SPIN_STOP;
     }
 
+    public void intakeSlidesSetManualIn(){intakeSlidesManualPower = INTAKE_SLIDES_MANUAL_IN;}
+
+    public void intakeSlidesSetManualOut(){intakeSlidesManualPower = INTAKE_SLIDES_MANUAL_OUT;}
+
+    public void intakeSlidesSetManualStop(){intakeSlidesManualPower = INTAKE_SLIDES_MANUAL_STOP;}
+
     //PIDF
     private int setIntakeSlidesPIDF(int target) {
         return 0;
@@ -130,8 +147,16 @@ public class IntakeSystem implements Subsystem {
 
     @Override
     public void update(){
-        intakeSetSlides(setIntakeSlidesPIDF(intakeSlidesTarget));
-        intakeSetSwivel(setIntakeSwivelPIDF(intakeSwivelTarget));
+        if (usePIDFIntakeSlides) {
+            intakeSetSlides(setIntakeSlidesPIDF(intakeSlidesTarget));
+        } else {
+            intakeSetSlides(intakeSlidesManualPower);
+        }
+        if (usePIDFIntakeSwivel) {
+            intakeSetSwivel(setIntakeSwivelPIDF(intakeSwivelTarget));
+        } else {
+            intakeSetSwivel(intakeSwivelManualPower);
+        }
         intakeSetSpin(intakeSpinTarget);
     }
 

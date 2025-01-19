@@ -22,26 +22,26 @@ public class OuttakeSystem implements Subsystem {
 
     //SOFTWARE
     //Positions
-    private double CLAW_OPEN;
-    private double CLAW_CLOSE;
-    private double WRIST_PERP;
-    private double WRIST_PAR;
-    private int OUTTAKE_SWIVEL_UP;
-    private int OUTTAKE_SWIVEL_DOWN;
-    private int OUTTAKE_SLIDES_HIGH;
-    private int OUTTAKE_SLIDES_LOW;
-    private int OUTTAKE_SLIDES_DOWN;
-    private int OUTTAKE_SLIDES_REST;
+    public double CLAW_OPEN;
+    public double CLAW_CLOSE;
+    public double WRIST_PERP;
+    public double WRIST_PAR;
+    public int OUTTAKE_SWIVEL_UP;
+    public int OUTTAKE_SWIVEL_DOWN;
+    public int OUTTAKE_SLIDES_HIGH;
+    public int OUTTAKE_SLIDES_LOW;
+    public int OUTTAKE_SLIDES_DOWN;
+    public int OUTTAKE_SLIDES_REST;
 
     //Targets
-    private int outtakeSlidesTarget;
-    private int outtakeSwivelTarget;
-    private double clawTarget;
-    private double wristTarget;
+    public int outtakeSlidesTarget;
+    public int outtakeSwivelTarget;
+    public double clawTarget;
+    public double wristTarget;
 
     //Max
-    private double OUTTAKE_SLIDES_MAX_POWER;
-    private double OUTTAKE_SWIVEL_MAX_POWER;
+    public double OUTTAKE_SLIDES_MAX_POWER = 1.0;
+    public double OUTTAKE_SWIVEL_MAX_POWER = 1.0;
 
     //PIDF
 
@@ -60,12 +60,14 @@ public class OuttakeSystem implements Subsystem {
     //Core Methods
     public void outtakeSetSlides(double pow) {
         if(pow > OUTTAKE_SLIDES_MAX_POWER) pow = OUTTAKE_SLIDES_MAX_POWER;
+        if(pow < -OUTTAKE_SLIDES_MAX_POWER) pow = -OUTTAKE_SLIDES_MAX_POWER;
         outtakeBottomVertical.setPower(pow);
         outtakeTopVertical.setPower(pow);
     }
 
     public void outtakeSetSwivel(double pow) {
         if(pow > OUTTAKE_SWIVEL_MAX_POWER) pow = OUTTAKE_SWIVEL_MAX_POWER;
+        if(pow < -OUTTAKE_SWIVEL_MAX_POWER) pow = -OUTTAKE_SWIVEL_MAX_POWER;
         outtakeLeftSwivel.setPower(pow);
         outtakeRightSwivel.setPower(pow);
     }

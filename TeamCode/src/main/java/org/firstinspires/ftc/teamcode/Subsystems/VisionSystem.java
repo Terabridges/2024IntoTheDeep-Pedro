@@ -11,6 +11,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
 
 public class VisionSystem implements Subsystem {
 
@@ -18,21 +25,25 @@ public class VisionSystem implements Subsystem {
     public RevColorSensorV3 intakeColorSensor;
     public DistanceSensor leftBackDistance;
     public DistanceSensor rightBackDistance;
-    public Camera frontCamera;
-    public Camera backCamera;
     public TouchSensor magLimitSwitch;
     public Servo lightOne;
 
     //Software
     NormalizedRGBA colors;
+    private boolean camInited = false;
+
+    public VisionPortal vp;
+    public VisionPortal.Builder vpBuilder;
+    public List<AprilTagDetection> detections;
+    public List<VisionProcessor> processors;
+    HardwareMap hardwareMap;
+
 
     //Constructor
     public VisionSystem(HardwareMap map) {
         intakeColorSensor = map.get(RevColorSensorV3.class, "intake_color_sensor");
         leftBackDistance = map.get(DistanceSensor.class, "left_back_distance");
         rightBackDistance = map.get(DistanceSensor.class, "right_back_distance");
-        frontCamera = map.get(Camera.class, "front_camera");
-        backCamera = map.get(Camera.class, "back_camera");
         magLimitSwitch = map.get(TouchSensor.class, "limit_switch");
         lightOne = map.get(Servo.class, "light_one");
     }
@@ -72,9 +83,51 @@ public class VisionSystem implements Subsystem {
 
     //Interface Methods
     @Override
-    public void toInit(){
+    public void toInit() {
+        if (!camInited) {
+            initProcessors();
+            vp = vpBuilder.build();
+
+            vp.resumeStreaming();
+            camInited = true;
+        }
+    }
+
+    private void initProcessors() {
+        if(camInited) return;
+        for (VisionProcessor processor : processors) {
+            vpBuilder.addProcessors(processor);
+        }
+    }
+
+    private void addProcessors(VisionProcessor... processors) {
+        if (camInited) return;
+        for (VisionProcessor processor : processors) {
+            vpBuilder.addProcessor(processor);
+        }
+    }
+
+    public void addAprilTag() {
+        addProcessors(new AprilTagProcessor.Builder().setDrawAxes(true).build());
+    }
+
+    private VisionPortal.Builder vpBuilderFront() {
+
+        // Create a VisionPortal builder
+        return new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "front_camera"));
 
     }
+
+    private VisionPortal.Builder vpBuilderBack() {
+
+        // Create a VisionPortal builder
+        return new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "back_camera"));
+
+    }
+
+
 
     @Override
     public void update(){
