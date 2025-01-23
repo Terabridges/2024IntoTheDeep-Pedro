@@ -119,8 +119,8 @@ public class OpenCV extends LinearOpMode {
 
             // IMPORTANT: Change the scalar(hue, saturation, value) values to match the colors.
             // These values are incorrect.
-            Scalar lowerYellow = new Scalar(0, 100, 100);
-            Scalar upperYellow = new Scalar(180, 255, 255);
+            Scalar lowerYellow = new Scalar(0, 0, 0);
+            Scalar upperYellow = new Scalar(255, 100, 100);
 
             //Isolates a region of area based on intensity of yellow
             Mat yellowMask = new Mat();
