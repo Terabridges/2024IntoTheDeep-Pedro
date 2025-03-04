@@ -72,7 +72,9 @@ import java.util.List;
 public class AprilTagTest extends LinearOpMode {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
-
+    private double x_dist;
+    private double y_dist;
+    private double z_dist;
     /**
      * Variables to store the position and orientation of the camera on the robot. Setting these
      * values requires a definition of the axes of the camera and robot:
@@ -232,9 +234,9 @@ public class AprilTagTest extends LinearOpMode {
             if (detection.metadata != null) {
                 double usableYawDegrees = (detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)) + 90;
                 double usableYawRadians = (detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS)) + (Math.PI / 2);
-                double x_dist = 72 - detection.robotPose.getPosition().y; // 0.9449
-                double y_dist = (detection.robotPose.getPosition().x) + 72; //* Math.cos(Math.abs(usableYawRadians));
-                double z_dist = detection.robotPose.getPosition().z;
+                x_dist = 72 - detection.robotPose.getPosition().y; // 0.9449
+                y_dist = (detection.robotPose.getPosition().x) + 72; //* Math.cos(Math.abs(usableYawRadians));
+                z_dist = detection.robotPose.getPosition().z;
 
 
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
@@ -255,16 +257,23 @@ public class AprilTagTest extends LinearOpMode {
         // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-
     }   // end method telemetryAprilTag()
-    public static double convertRadianToDegrees(double angle)
+
+    public double getXDist()
     {
-        return angle * (180/Math.PI);
+        return x_dist;
     }
 
-    public static double convertDegreeToRadians(double angle)
+    public double getYDist()
     {
-        return angle * (Math.PI/ 180);
+        return y_dist;
     }
+
+    public double getZDist()
+    {
+        return z_dist;
+    }
+
+
 
 }   // end class

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.FtcDashboard;
+import org.firstinspires.ftc.teamcode.Tests.AprilTagTest;
 
 @Config
 @TeleOp(name="ShoddyTeleOp", group="TeleOp")
