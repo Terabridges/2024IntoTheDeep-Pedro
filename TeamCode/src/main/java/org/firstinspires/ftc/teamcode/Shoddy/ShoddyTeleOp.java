@@ -174,6 +174,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         ////////////////////////////////////////////////////////////////////////////////
         waitForStart();
         runtime.reset();
+        aprilTag.runOpMode();
 
         V4BTarget = po.V4B_TRANSFER_POS;
         vertSlidesTarget = po.VERTICAL_REST;
@@ -266,7 +267,7 @@ public class ShoddyTeleOp extends LinearOpMode {
                     }
                 }
             }
-            
+
             if (aprilTag.getXDist() < 40)
             {
                 telemetry.addData("Within", "Range");
