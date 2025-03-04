@@ -21,6 +21,7 @@ public class ShoddyTeleOp extends LinearOpMode {
     ShoddyToggles t;
     ShoddyPositions po;
     private ElapsedTime runtime;
+    AprilTagTest aprilTag = new AprilTagTest();
 
 
     public boolean usePIDFvertical = true;
@@ -124,6 +125,7 @@ public class ShoddyTeleOp extends LinearOpMode {
         t = new ShoddyToggles(this);
         po = new ShoddyPositions();
         runtime = new ElapsedTime();
+
 
         r.wheelSetUp();
         r.servoSetUp();
@@ -264,7 +266,11 @@ public class ShoddyTeleOp extends LinearOpMode {
                     }
                 }
             }
-
+            
+            if (aprilTag.getXDist() < 40)
+            {
+                telemetry.addData("Within", "Range");
+            }
             // Vertical Adjust (Triggers) Vertical Hold (Left stick button)
             {
 
