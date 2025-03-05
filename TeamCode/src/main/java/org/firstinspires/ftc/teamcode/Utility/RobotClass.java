@@ -18,7 +18,7 @@ public class RobotClass {
 
     //Other Motors
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
         //A
 
         //B
@@ -31,11 +31,11 @@ public class RobotClass {
         //A
     public Servo leftSlideServo;
     public Servo rightSlideServo;
-=======
+//=======
     //Servos
->>>>>>> parent of 69ac192 (More TeleOp Work)
-    public Servo leftSlideServo;
-    public Servo rightSlideServo;
+//>>>>>>> parent of 69ac192 (More TeleOp Work)
+    //public Servo leftSlideServo;
+    //public Servo rightSlideServo;
     public CRServo leftArmServo;
     public CRServo rightArmServo;
     public CRServo intakeServo;
