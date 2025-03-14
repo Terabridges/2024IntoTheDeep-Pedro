@@ -114,13 +114,6 @@ public class AprilTagTest extends LinearOpMode {
      */
     private VisionPortal visionPortal;
 
-    public AprilTagTest()
-    {
-        x_dist = 0;
-        y_dist = 0;
-        z_dist = 0;
-    }
-
     @Override
     public void runOpMode() {
 
