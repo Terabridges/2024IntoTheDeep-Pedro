@@ -99,6 +99,14 @@ public class AprilTagTest extends LinearOpMode {
      * it's pointing straight left, -90 degrees for straight right, etc. You can also set the roll
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
+
+    public AprilTagTest()
+    {
+        x_dist = 0;
+        y_dist = 0;
+        z_dist = 0;
+    }
+    
     private Position cameraPosition = new Position(DistanceUnit.INCH,
             0, 0, 0, 0);
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
