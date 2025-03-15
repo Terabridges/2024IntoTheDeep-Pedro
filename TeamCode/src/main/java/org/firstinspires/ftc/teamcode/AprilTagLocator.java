@@ -28,6 +28,8 @@ package org.firstinspires.ftc.teamcode;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -124,6 +126,11 @@ public class AprilTagLocator extends LinearOpMode
         // Initialize the Apriltag Detection process
         initAprilTag();
 
+
+
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must match the names assigned during the robot configuration.
         // step (using the FTC Robot Controller app on the phone).
@@ -182,6 +189,9 @@ public class AprilTagLocator extends LinearOpMode
                 telemetry.addData("Range",  "%5.1f inches", desiredTag.ftcPose.range);
                 telemetry.addData("Bearing","%3.0f degrees", desiredTag.ftcPose.bearing);
                 telemetry.addData("Yaw","%3.0f degrees", desiredTag.ftcPose.yaw);
+                telemetry.addData("X-Pos", desiredTag.ftcPose.x);
+                telemetry.addData("Y-Pos", desiredTag.ftcPose.y);
+                telemetry.addData("Z-Pos", desiredTag.ftcPose.z);
             } else {
                 telemetry.addData("\n>","Drive using joysticks to find valid target\n");
             }
